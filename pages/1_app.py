@@ -426,9 +426,9 @@ with tab3:
     if uploaded_file:
         try:
             if uploaded_file.name.endswith(".csv"):
-                df = pd.read_csv(uploaded_file)
+                df = pd.read_csv(uploaded_file, encoding="utf-8", errors="replace")
             else:
-                df = pd.read_excel(uploaded_file)
+                df = pd.read_excel(uploaded_file, engine="openpyxl")
 
             st.write("📄 Preview Data:")
             st.dataframe(df)
@@ -437,7 +437,7 @@ with tab3:
             destinasi_columns = set(["Nama", "Kab/Kota", "Kecamatan", "Kelurahan/Desa", "Deskripsi", "Rating"])
             industri_columns = set([
                 "Nama_Usaha", "Jenis_Industri", "Alamat",
-                "Jumlah_Karyawan", "Jumlah_Kamar", "Fasilitas",
+                "Jumlah_Karyawan", "Bintang_Hotel", "Jumlah_Kamar", "Fasilitas",
                 "Jenis_Kontak", "Kontak"
             ])
 
@@ -445,34 +445,35 @@ with tab3:
             uploaded_columns = set(df.columns)
 
             # Tentukan tabel tujuan berdasarkan kolom
-            if uploaded_columns == destinasi_columns:
+            if destinasi_columns.issubset(uploaded_columns):
                 table_name = "Destinasi Wisata"
                 jenis_data = "Destinasi"
                 required_columns = list(destinasi_columns)
                 validation_rules = {
-                    "Nama": lambda x: isinstance(x, str) and x.strip() != "",
-                    "Kab/Kota": lambda x: isinstance(x, str) and x.strip() != "",
-                    "Kecamatan": lambda x: isinstance(x, str) and x.strip() != "",
-                    "Kelurahan/Desa": lambda x: isinstance(x, str) and x.strip() != "",
-                    "Deskripsi": lambda x: isinstance(x, str) and x.strip() != "",
-                    "Rating": lambda x: isinstance(x, (int, float)) and 1 <= x <= 10
+                    "Nama": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
+                    "Kab/Kota": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
+                    "Kecamatan": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
+                    "Kelurahan/Desa": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
+                    "Deskripsi": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
+                    "Rating": lambda x: not pd.isna(x) and isinstance(x, (int, float)) and 1 <= x <= 10
                 }
-            elif uploaded_columns == industri_columns:
+            elif industri_columns.issubset(uploaded_columns):
                 table_name = "Industri"
                 jenis_data = "Industri"
                 required_columns = list(industri_columns)
                 validation_rules = {
-                    "Nama_Usaha": lambda x: isinstance(x, str) and x.strip() != "",
-                    "Jenis_Industri": lambda x: isinstance(x, str) and x.strip() != "",
-                    "Alamat": lambda x: isinstance(x, str) and x.strip() != "",
-                    "Jumlah_Karyawan": lambda x: isinstance(x, (int, float)) and x >= 0,
+                    "Nama_Usaha": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
+                    "Jenis_Industri": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
+                    "Alamat": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
+                    "Jumlah_Karyawan": lambda x: not pd.isna(x) and isinstance(x, (int, float)) and x >= 0,
+                    "Bintang_Hotel": lambda x: pd.isna(x) or (isinstance(x, (int, float)) and x >= 0),
                     "Jumlah_Kamar": lambda x: pd.isna(x) or (isinstance(x, (int, float)) and x >= 0),
                     "Fasilitas": lambda x: pd.isna(x) or isinstance(x, str),
-                    "Jenis_Kontak": lambda x: isinstance(x, str) and x.strip() != "",
-                    "Kontak": lambda x: isinstance(x, str) and x.strip() != ""
+                    "Jenis_Kontak": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
+                    "Kontak": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != ""
                 }
             else:
-                show_notification("error", "❌ Kolom file tidak sesuai dengan template Destinasi atau Industri!")
+                show_notification("error", "❌ Kolom file tidak sesuai dengan template Destinasi atau Industri! Kolom yang diharapkan: Destinasi (" + ", ".join(destinasi_columns) + ") atau Industri (" + ", ".join(industri_columns) + ")")
                 table_name = None
                 jenis_data = None
                 required_columns = []
@@ -493,11 +494,13 @@ with tab3:
                     show_notification("success", f"✅ Struktur file valid untuk {jenis_data}! Siap dikirim ke database.")
 
                     if st.button(f"Kirim Data ke Database"):
-                        df["Tanggal_Input"] = datetime.datetime.now().isoformat()
+                        df["Tanggal_Input"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         if table_name == "Industri":
                             df["Jumlah_Karyawan"] = df["Jumlah_Karyawan"].astype("Int64")
                             if "Jumlah_Kamar" in df.columns:
                                 df["Jumlah_Kamar"] = df["Jumlah_Kamar"].astype("Int64")
+                            if "Bintang_Hotel" in df.columns:
+                                df["Bintang_Hotel"] = df["Bintang_Hotel"].astype("Int64")
 
                         df = df.where(pd.notnull(df), None)  # Replace NaN with None
                         data = df.to_dict(orient="records")
@@ -516,9 +519,10 @@ with tab3:
                             if res.status_code == 201:
                                 show_notification("success", "✅ Data berhasil dikirim ke Supabase!")
                             else:
-                                show_notification("error", f"❌ Gagal kirim data: {res.text}")
+                                error_message = res.json().get("message", res.text) if res.text else "Unknown error"
+                                show_notification("error", f"❌ Gagal kirim data: {res.status_code} - {error_message}")
                         except requests.RequestException as e:
-                            show_notification("error", f"❌ Gagal kirim data ke Supabase: {e}")
+                            show_notification("error", f"❌ Gagal kirim data ke Supabase: {str(e)}")
 
             # Download ulang file sebagai Excel
             towrite = io.BytesIO()
@@ -531,9 +535,10 @@ with tab3:
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
 
+        except UnicodeDecodeError:
+            show_notification("error", "❌ Gagal membaca file CSV: Encoding tidak didukung. Harap gunakan encoding UTF-8.")
         except Exception as e:
             show_notification("error", f"❌ Terjadi kesalahan saat membaca file: {str(e)}")
-            st.rerun()
 
     st.markdown("💾 Belum punya template? Silakan download:")
     col1, col2 = st.columns(2)
@@ -542,18 +547,28 @@ with tab3:
         buffer_destinasi = io.BytesIO()
         destinasi_template.to_excel(buffer_destinasi, index=False, engine='openpyxl')
         buffer_destinasi.seek(0)
-        st.download_button("📄 Template Destinasi (Excel)", buffer_destinasi, file_name="template_destinasi.xlsx")
+        st.download_button(
+            label="📄 Template Destinasi (Excel)",
+            data=buffer_destinasi,
+            file_name="template_destinasi.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
     with col2:
         industri_template = pd.DataFrame(columns=[
             "Nama_Usaha", "Jenis_Industri", "Alamat",
-            "Jumlah_Karyawan", "Jumlah_Kamar", "Fasilitas",
-            "Jenis_Kontak", "Kontak"])
+            "Jumlah_Karyawan", "Bintang_Hotel", "Jumlah_Kamar", "Fasilitas",
+            "Jenis_Kontak", "Kontak"
+        ])
         buffer_industri = io.BytesIO()
         industri_template.to_excel(buffer_industri, index=False, engine='openpyxl')
         buffer_industri.seek(0)
-        st.download_button("🏨 Template Industri (Excel)", buffer_industri, file_name="template_industri.xlsx")
-        
+        st.download_button(
+            label="🏨 Template Industri (Excel)",
+            data=buffer_industri,
+            file_name="template_industri.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )        
 # =======================
 # 📈 PROGRES UPLOAD DATA (Hanya untuk Admin)
 # =======================
