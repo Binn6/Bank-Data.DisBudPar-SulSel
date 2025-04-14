@@ -124,7 +124,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 Database Data Dinas Kebudayaan & Pariwisata Provinsi Sulawesi Selatan")
+st.title("📊 Pemutakhiran Data Industri Pariwisata Tahun 2025 Sulawesi Selatan")
 
 # Tambahkan tombol logout
 if st.button("Logout"):
