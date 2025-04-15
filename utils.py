@@ -37,7 +37,6 @@ def get_kabupaten_by_email(email, retries=5, delay=1):
 
     return None
 
-# Fungsi untuk mendapatkan email dari token JWT
 def get_email_from_token(token):
     try:
         url = f"{st.secrets['SUPABASE_URL']}/auth/v1/user"
@@ -54,7 +53,6 @@ def get_email_from_token(token):
         print(f"❌ Gagal verifikasi token: {e}")
         return None
 
-# Fungsi untuk mengambil daftar semua kabupaten/kota dari user_info
 def get_all_kabupaten():
     try:
         SUPABASE_URL = st.secrets["SUPABASE_URL"]
@@ -73,7 +71,6 @@ def get_all_kabupaten():
         res = requests.get(endpoint, headers=headers)
         if res.status_code == 200:
             data = res.json()
-            # Ambil daftar kabupaten/kota unik, kecualikan "admin"
             kabupaten_list = sorted(set(item["kabupaten_kota"] for item in data if item["kabupaten_kota"] != "admin"))
             return kabupaten_list
         else:
@@ -83,38 +80,32 @@ def get_all_kabupaten():
         print(f"❌ Gagal mengambil data kabupaten: {e}")
         return []
 
-# Fungsi untuk menghitung jumlah entri per Kab/Kota dari tabel tertentu
-def get_count_by_kabupaten(table_name, kabupaten_list):
+def get_count_by_kabupaten(table_name, kabupaten_list, kab_column="Kab_Kota"):
     try:
         SUPABASE_URL = st.secrets["SUPABASE_URL"]
         SUPABASE_API_KEY = st.secrets["SUPABASE_API_KEY"]
     except KeyError as e:
         print(f"❌ Missing secret: {e}")
-        return {}
+        return {kab: 0 for kab in kabupaten_list}
 
     headers = {
         "apikey": SUPABASE_API_KEY,
         "Authorization": f"Bearer {SUPABASE_API_KEY}",
     }
 
-    # Inisialisasi dictionary dengan nilai 0 untuk semua kabupaten
     count_by_kabupaten = {kab: 0 for kab in kabupaten_list}
 
-    # Ambil data dari tabel
-    endpoint = f"{SUPABASE_URL}/rest/v1/{table_name}?select=Kab/Kota"
-    try:
-        res = requests.get(endpoint, headers=headers)
-        if res.status_code == 200:
-            data = res.json()
-            # Hitung jumlah entri per Kab/Kota
-            for item in data:
-                kab = item.get("Kab/Kota")
-                if kab in count_by_kabupaten:
-                    count_by_kabupaten[kab] += 1
-            return count_by_kabupaten
-        else:
-            print(f"❌ Gagal mengambil data dari {table_name}: Status {res.status_code}, Error: {res.text}")
-            return count_by_kabupaten
-    except requests.RequestException as e:
-        print(f"❌ Gagal mengambil data dari {table_name}: {e}")
-        return count_by_kabupaten
+    for kab in kabupaten_list:
+        try:
+            encoded_kab = urllib.parse.quote(kab)
+            endpoint = f"{SUPABASE_URL}/rest/v1/{table_name}?{kab_column}=eq.{encoded_kab}&select=count"
+            res = requests.get(endpoint, headers=headers)
+            if res.status_code == 200:
+                data = res.json()
+                count_by_kabupaten[kab] = data[0]["count"] if data else 0
+            else:
+                print(f"❌ Gagal mengambil data dari {table_name} untuk {kab}: Status {res.status_code}, Error: {res.text}")
+        except requests.RequestException as e:
+            print(f"❌ Gagal mengambil data dari {table_name} untuk {kab}: {e}")
+
+    return count_by_kabupaten

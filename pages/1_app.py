@@ -159,9 +159,6 @@ def show_notification(type, message, delay=2):
 # =======================
 # 🚀 TAB NAVIGATION
 # =======================
-# =======================
-# 🚀 TAB NAVIGATION
-# =======================
 # Cek apakah pengguna adalah admin
 is_admin = st.session_state['user_email'] == "sulsel.disbudpar@gmail.com"
 
@@ -182,7 +179,7 @@ with tab1:
     # Inisialisasi nilai default untuk form menggunakan session state
     if st.session_state.form_destinasi_reset:
         nama = ""
-        kabupaten_kota = ""
+        kab_kota = ""
         kecamatan = ""
         kelurahan_desa = ""
         deskripsi = ""
@@ -191,7 +188,7 @@ with tab1:
         st.session_state.form_destinasi_reset = False
     else:
         nama = st.session_state.get("nama", "")
-        kabupaten_kota = st.session_state.get("kabupaten_kota", "")
+        kab_kota = st.session_state.get("kab_kota", "")
         kecamatan = st.session_state.get("kecamatan", "")
         kelurahan_desa = st.session_state.get("kelurahan_desa", "")
         deskripsi = st.session_state.get("deskripsi", "")
@@ -201,7 +198,7 @@ with tab1:
     with st.form("form_destinasi"):
         with col1:
             nama = st.text_input("Nama Destinasi", value=nama, placeholder="Masukkan Nama Destinasi", key="nama_input")
-            kabupaten_kota = st.text_input("Kabupaten/Kota", value=kabupaten_kota, placeholder="Masukkan Kabupaten/Kota", key="kabupaten_kota_input")
+            kab_kota = st.text_input("Kabupaten/Kota", value=kab_kota, placeholder="Masukkan Kabupaten/Kota", key="kab_kota_input")
             kecamatan = st.text_input("Kecamatan", value=kecamatan, placeholder="Masukkan Kecamatan", key="kecamatan_input")
             kelurahan_desa = st.text_input("Kelurahan/Desa", value=kelurahan_desa, placeholder="Masukkan Kelurahan/Desa", key="kelurahan_desa_input")
 
@@ -214,7 +211,7 @@ with tab1:
 
     if submit_destinasi:
         # Validasi semua kolom wajib, termasuk gambar
-        if not all([nama.strip(), kabupaten_kota.strip(), kecamatan.strip(), kelurahan_desa.strip(), deskripsi.strip()]) or gambar is None:
+        if not all([nama.strip(), kab_kota.strip(), kecamatan.strip(), kelurahan_desa.strip(), deskripsi.strip()]) or gambar is None:
             show_notification("warning", "⚠️ Harap isi semua kolom wajib sebelum mengirim, termasuk gambar.")
         else:
             try:
@@ -253,9 +250,9 @@ with tab1:
                     else:
                         data = {
                             "Nama": nama,
-                            "Kab/Kota": kabupaten_kota,
+                            "Kab_Kota": kab_kota,  # Diperbarui dari Kab/Kota
                             "Kecamatan": kecamatan,
-                            "Kelurahan/Desa": kelurahan_desa,
+                            "Kelurahan_Desa": kelurahan_desa,  # Diperbarui dari Kelurahan/Desa
                             "Deskripsi": deskripsi,
                             "Rating": rating,
                             "Gambar_URL": gambar_url,
@@ -296,10 +293,13 @@ with tab2:
         fasilitas = ""
         jenis_kontak = None
         kontak = ""
-        jumlah_karyawan = 0
-        alamat_usaha = ""
+        jumlah_karyawan_pria = 0
+        jumlah_karyawan_wanita = 0
+        kab_kota = ""
+        kecamatan = ""
+        kelurahan_desa = ""
         gambar_industri = None
-        bintang_hotel = 0  # Tambahkan default untuk bintang_hotel
+        bintang_hotel = 0
     else:
         nama_usaha = st.session_state.get("nama_usaha", "")
         jenis_industri = st.session_state.get("jenis_industri", None)
@@ -307,10 +307,13 @@ with tab2:
         fasilitas = st.session_state.get("fasilitas", "")
         jenis_kontak = st.session_state.get("jenis_kontak", None)
         kontak = st.session_state.get("kontak", "")
-        jumlah_karyawan = st.session_state.get("jumlah_karyawan", 0)
-        alamat_usaha = st.session_state.get("alamat_usaha", "")
+        jumlah_karyawan_pria = st.session_state.get("jumlah_karyawan_pria", 0)
+        jumlah_karyawan_wanita = st.session_state.get("jumlah_karyawan_wanita", 0)
+        kab_kota = st.session_state.get("kab_kota_industri", "")
+        kecamatan = st.session_state.get("kecamatan_industri", "")
+        kelurahan_desa = st.session_state.get("kelurahan_desa_industri", "")
         gambar_industri = None
-        bintang_hotel = st.session_state.get("bintang_hotel", 0)  # Tambahkan ke session state
+        bintang_hotel = st.session_state.get("bintang_hotel", 0)
 
     col1, col2 = st.columns(2)
 
@@ -318,12 +321,13 @@ with tab2:
         with col1:
             nama_usaha = st.text_input("Nama Usaha", value=nama_usaha, placeholder="Masukkan Nama Usaha", key="nama_usaha_input")
             jenis_industri = st.selectbox("Jenis Industri", ["Travel", "Hotel", "Penginapan", "Villa", "Homestay", "Restoran", "Rumah Makan", "Catering", "Spa", "Fitness", "Hiburan Malam"], index=None, placeholder="Pilih Jenis Industri", key="jenis_industri_input")
+            jumlah_karyawan_pria = st.number_input("Jumlah Karyawan Pria", value=jumlah_karyawan_pria, min_value=0, key="jumlah_karyawan_pria_input")
+            jumlah_karyawan_wanita = st.number_input("Jumlah Karyawan Wanita", value=jumlah_karyawan_wanita, min_value=0, key="jumlah_karyawan_wanita_input")
             jumlah_kamar = None
             fasilitas = None
             if jenis_industri in ["Hotel", "Penginapan", "Villa", "Homestay"]:
                 jumlah_kamar = st.number_input("Jumlah Kamar", value=jumlah_kamar, min_value=0, key="jumlah_kamar_input")
                 fasilitas = st.text_input("Fasilitas", value=fasilitas, placeholder="Masukkan Fasilitas Tersedia", key="fasilitas_input")
-            # Tambahkan slider untuk Bintang Hotel jika Jenis Industri adalah Hotel
             bintang_hotel = None
             if jenis_industri == "Hotel":
                 bintang_hotel = st.slider("Jumlah Bintang Hotel (0-5)", 0, 5, value=bintang_hotel, key="bintang_hotel_input")
@@ -331,15 +335,24 @@ with tab2:
         with col2:
             jenis_kontak = st.selectbox("Jenis Kontak", options=["Whatsapp", "Instagram", "Email"], index=None, placeholder="Pilih Jenis Kontak", key="jenis_kontak_input")
             kontak = st.text_input(f"{jenis_kontak}", value=kontak, placeholder=f"Masukkan {jenis_kontak}" if jenis_kontak else "", key="kontak_input") if jenis_kontak else None
-            jumlah_karyawan = st.number_input("Jumlah Karyawan", value=jumlah_karyawan, min_value=0, key="jumlah_karyawan_input")
-            alamat_usaha = st.text_area("Alamat Usaha", value=alamat_usaha, key="alamat_usaha_input")
+            kab_kota = st.text_input("Kabupaten/Kota", value=kab_kota, placeholder="Masukkan Kabupaten/Kota", key="kab_kota_industri_input")
+            kecamatan = st.text_input("Kecamatan", value=kecamatan, placeholder="Masukkan Kecamatan", key="kecamatan_industri_input")
+            kelurahan_desa = st.text_input("Kelurahan/Desa", value=kelurahan_desa, placeholder="Masukkan Kelurahan/Desa", key="kelurahan_desa_industri_input")
             gambar_industri = st.file_uploader("Upload Gambar Usaha", type=["jpg", "jpeg", "png"], key="gambar_industri_input")
 
         submit_industri = st.form_submit_button("Kirim Data Industri")
 
     if submit_industri:
-        required_fields = [nama_usaha.strip() if nama_usaha else "", jenis_industri, jenis_kontak, kontak.strip() if kontak else "", alamat_usaha.strip() if alamat_usaha else ""]
-        if not all(required_fields) or jumlah_karyawan <= 0:
+        required_fields = [
+            nama_usaha.strip() if nama_usaha else "",
+            jenis_industri,
+            jenis_kontak,
+            kontak.strip() if kontak else "",
+            kab_kota.strip() if kab_kota else "",
+            kecamatan.strip() if kecamatan else "",
+            kelurahan_desa.strip() if kelurahan_desa else ""
+        ]
+        if not all(required_fields):
             show_notification("warning", "⚠️ Semua kolom wajib diisi. Gambar opsional.")
         else:
             try:
@@ -382,14 +395,17 @@ with tab2:
                     data_industri = {
                         "Nama_Usaha": nama_usaha,
                         "Jenis_Industri": jenis_industri,
-                        "Jumlah_Karyawan": jumlah_karyawan,
+                        "Karyawan_Pria": jumlah_karyawan_pria,
+                        "Karyawan_Wanita": jumlah_karyawan_wanita,
                         "Jumlah_Kamar": jumlah_kamar,
                         "Fasilitas": fasilitas,
-                        "Alamat": alamat_usaha,
+                        "Kab_Kota": kab_kota,
+                        "Kecamatan": kecamatan,
+                        "Kelurahan_Desa": kelurahan_desa,
                         "Jenis_Kontak": jenis_kontak,
                         "Kontak": kontak,
                         "Gambar_URL": gambar_url,
-                        "Bintang_Hotel": bintang_hotel,  # Tambahkan kolom Bintang_Hotel
+                        "Bintang_Hotel": bintang_hotel,
                         "Tanggal_Input": datetime.datetime.now().isoformat()
                     }
                     try:
@@ -403,15 +419,15 @@ with tab2:
                             }
                         )
                         if res.status_code == 201:
-                            show_notification("success", "✅ Data industri successfully sent to Supabase!")
+                            show_notification("success", "✅ Data industri berhasil dikirim ke Supabase!")
                             st.session_state.clear_form_industri = True
                             st.rerun()
                         else:
-                            show_notification("error", f"❌ Failed to send data: {res.text}")
+                            show_notification("error", f"❌ Gagal kirim data: {res.text}")
                     except requests.RequestException as e:
                         show_notification("error", f"❌ Gagal kirim data ke Supabase: {e}")
             except Exception as e:
-                show_notification("error", f"❌ An error occurred: {e}")
+                show_notification("error", f"❌ Terjadi kesalahan: {e}")
 
 # =======================
 # 📁 UPLOAD EXCEL/CSV
@@ -434,10 +450,10 @@ with tab3:
             st.dataframe(df)
 
             # Definisikan kolom yang diharapkan untuk masing-masing tabel
-            destinasi_columns = set(["Nama", "Kab/Kota", "Kecamatan", "Kelurahan/Desa", "Deskripsi", "Rating"])
+            destinasi_columns = set(["Nama", "Kab_Kota", "Kecamatan", "Kelurahan_Desa", "Deskripsi", "Rating"])
             industri_columns = set([
-                "Nama_Usaha", "Jenis_Industri", "Alamat",
-                "Jumlah_Karyawan", "Bintang_Hotel", "Jumlah_Kamar", "Fasilitas",
+                "Nama_Usaha", "Jenis_Industri", "Kab_Kota", "Kecamatan", "Kelurahan_Desa",
+                "Karyawan_Pria", "Karyawan_Wanita", "Bintang_Hotel", "Jumlah_Kamar", "Fasilitas",
                 "Jenis_Kontak", "Kontak"
             ])
 
@@ -451,9 +467,9 @@ with tab3:
                 required_columns = list(destinasi_columns)
                 validation_rules = {
                     "Nama": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Kab/Kota": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
+                    "Kab_Kota": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
                     "Kecamatan": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Kelurahan/Desa": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
+                    "Kelurahan_Desa": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
                     "Deskripsi": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
                     "Rating": lambda x: not pd.isna(x) and isinstance(x, (int, float)) and 1 <= x <= 10
                 }
@@ -464,16 +480,19 @@ with tab3:
                 validation_rules = {
                     "Nama_Usaha": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
                     "Jenis_Industri": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Alamat": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Jumlah_Karyawan": lambda x: not pd.isna(x) and isinstance(x, (int, float)) and x >= 0,
+                    "Kab_Kota": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
+                    "Kecamatan": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
+                    "Kelurahan_Desa": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
+                    "Karyawan_Pria": lambda x: not pd.isna(x) and isinstance(x, (int, float)) and x >= 0,
+                    "Karyawan_Wanita": lambda x: not pd.isna(x) and isinstance(x, (int, float)) and x >= 0,
                     "Bintang_Hotel": lambda x: pd.isna(x) or (isinstance(x, (int, float)) and x >= 0),
                     "Jumlah_Kamar": lambda x: pd.isna(x) or (isinstance(x, (int, float)) and x >= 0),
                     "Fasilitas": lambda x: pd.isna(x) or isinstance(x, str),
                     "Jenis_Kontak": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Kontak": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != ""
+                    "Kontak": lambda x: not pd.isna(x) and str(x).strip() != ""
                 }
             else:
-                show_notification("error", "❌ Kolom file tidak sesuai dengan template Destinasi atau Industri! Kolom yang diharapkan: Destinasi (" + ", ".join(destinasi_columns) + ") atau Industri (" + ", ".join(industri_columns) + ")")
+                show_notification("error", "❌ Kolom file tidak sesuai dengan template Destinasi (" + ", ".join(destinasi_columns) + ") atau Industri (" + ", ".join(industri_columns) + ")")
                 table_name = None
                 jenis_data = None
                 required_columns = []
@@ -495,8 +514,10 @@ with tab3:
 
                     if st.button(f"Kirim Data ke Database"):
                         df["Tanggal_Input"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
                         if table_name == "Industri":
-                            df["Jumlah_Karyawan"] = df["Jumlah_Karyawan"].astype("Int64")
+                            df["Karyawan_Pria"] = df["Karyawan_Pria"].astype("Int64")
+                            df["Karyawan_Wanita"] = df["Karyawan_Wanita"].astype("Int64")
                             if "Jumlah_Kamar" in df.columns:
                                 df["Jumlah_Kamar"] = df["Jumlah_Kamar"].astype("Int64")
                             if "Bintang_Hotel" in df.columns:
@@ -543,7 +564,7 @@ with tab3:
     st.markdown("💾 Belum punya template? Silakan download:")
     col1, col2 = st.columns(2)
     with col1:
-        destinasi_template = pd.DataFrame(columns=["Nama", "Kab/Kota", "Kecamatan", "Kelurahan/Desa", "Deskripsi", "Rating"])
+        destinasi_template = pd.DataFrame(columns=["Nama", "Kab_Kota", "Kecamatan", "Kelurahan_Desa", "Deskripsi", "Rating"])
         buffer_destinasi = io.BytesIO()
         destinasi_template.to_excel(buffer_destinasi, index=False, engine='openpyxl')
         buffer_destinasi.seek(0)
@@ -556,8 +577,8 @@ with tab3:
 
     with col2:
         industri_template = pd.DataFrame(columns=[
-            "Nama_Usaha", "Jenis_Industri", "Alamat",
-            "Jumlah_Karyawan", "Bintang_Hotel", "Jumlah_Kamar", "Fasilitas",
+            "Nama_Usaha", "Jenis_Industri", "Kab_Kota", "Kecamatan", "Kelurahan_Desa",
+            "Karyawan_Pria", "Karyawan_Wanita", "Bintang_Hotel", "Jumlah_Kamar", "Fasilitas",
             "Jenis_Kontak", "Kontak"
         ])
         buffer_industri = io.BytesIO()
@@ -568,7 +589,7 @@ with tab3:
             data=buffer_industri,
             file_name="template_industri.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )        
+        )
 # =======================
 # 📈 PROGRES UPLOAD DATA (Hanya untuk Admin)
 # =======================
@@ -576,33 +597,28 @@ if is_admin:
     with tab4:
         st.subheader("📈 Progres Upload Data per Kabupaten/Kota")
 
-        # Ambil daftar semua kabupaten/kota
         kabupaten_list = get_all_kabupaten()
         if not kabupaten_list:
             st.error("❌ Gagal mengambil daftar kabupaten/kota.")
             st.stop()
 
-        # Ambil jumlah entri dari Destinasi Wisata dan Industri
-        destinasi_counts = get_count_by_kabupaten("Destinasi%20Wisata", kabupaten_list)
-        industri_counts = get_count_by_kabupaten("Industri", kabupaten_list)
+        destinasi_counts = get_count_by_kabupaten("Destinasi%20Wisata", kabupaten_list, kab_column="Kab_Kota")
+        industri_counts = get_count_by_kabupaten("Industri", kabupaten_list, kab_column="Kab_Kota")
 
-        # Buat DataFrame untuk tabel progres
         progres_data = {
-            "Kabupaten/Kota": kabupaten_list,
-            "Jumlah Destinasi Wisata": [destinasi_counts[kab] for kab in kabupaten_list],
-            "Jumlah Industri": [industri_counts[kab] for kab in kabupaten_list]
+            "Kabupaten_Kota": kabupaten_list,
+            "Jumlah_Destinasi_Wisata": [destinasi_counts[kab] for kab in kabupaten_list],
+            "Jumlah_Industri": [industri_counts[kab] for kab in kabupaten_list]
         }
         progres_df = pd.DataFrame(progres_data)
 
-        # Tampilkan tabel progres
         st.write("**Tabel Progres Upload Data**")
         st.dataframe(progres_df, use_container_width=True)
 
-        # Statistik Ringkas
-        total_destinasi = progres_df["Jumlah Destinasi Wisata"].sum()
-        total_industri = progres_df["Jumlah Industri"].sum()
+        total_destinasi = progres_df["Jumlah_Destinasi_Wisata"].sum()
+        total_industri = progres_df["Jumlah_Industri"].sum()
         total_kabupaten = len(kabupaten_list)
-        kabupaten_with_data = len(progres_df[(progres_df["Jumlah Destinasi Wisata"] > 0) | (progres_df["Jumlah Industri"] > 0)])
+        kabupaten_with_data = len(progres_df[(progres_df["Jumlah_Destinasi_Wisata"] > 0) | (progres_df["Jumlah_Industri"] > 0)])
         percentage = (kabupaten_with_data / total_kabupaten * 100) if total_kabupaten > 0 else 0
 
         st.write("**Statistik Ringkas**")
