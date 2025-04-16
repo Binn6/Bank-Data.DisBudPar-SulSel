@@ -81,7 +81,7 @@ if 'user_email' not in st.session_state or 'kabupaten' not in st.session_state:
         st.stop()
 
 # ==============================
-# 🔐 Konfigurasi Supabase (sementara pakai secrets)
+# 🔐 Konfigurasi Supabase
 # ==============================
 try:
     SUPABASE_URL = st.secrets["SUPABASE_URL"]
@@ -184,6 +184,9 @@ with tab1:
         kelurahan_desa = ""
         deskripsi = ""
         rating = 5
+        fasilitas_umum = ""
+        jarak_ibukota = ""
+        pengelola = None
         gambar = None
         st.session_state.form_destinasi_reset = False
     else:
@@ -193,6 +196,9 @@ with tab1:
         kelurahan_desa = st.session_state.get("kelurahan_desa", "")
         deskripsi = st.session_state.get("deskripsi", "")
         rating = st.session_state.get("rating", 5)
+        fasilitas_umum = st.session_state.get("fasilitas_umum", "")
+        jarak_ibukota = st.session_state.get("jarak_ibukota", "")
+        pengelola = st.session_state.get("pengelola", None)
         gambar = None
 
     with st.form("form_destinasi"):
@@ -201,9 +207,12 @@ with tab1:
             kab_kota = st.text_input("Kabupaten/Kota", value=kab_kota, placeholder="Masukkan Kabupaten/Kota", key="kab_kota_input")
             kecamatan = st.text_input("Kecamatan", value=kecamatan, placeholder="Masukkan Kecamatan", key="kecamatan_input")
             kelurahan_desa = st.text_input("Kelurahan/Desa", value=kelurahan_desa, placeholder="Masukkan Kelurahan/Desa", key="kelurahan_desa_input")
+            pengelola = st.selectbox("Pengelola", ["Pemerintah", "Swasta", "Lainnya"], index=None, placeholder="Pilih Pengelola", key="pengelola_input")
 
         with col2:
-            deskripsi = st.text_area("Deskripsi Destinasi", value=deskripsi, placeholder="Masukkan Deskripsi Destinasi Wisata Anda Contoh : Pulau ini dengan daya tarik keindahan pasir putih dan air laut yang jernih beserta pepohonan yang rindang", key="deskripsi_input")
+            deskripsi = st.text_area("Deskripsi Destinasi", value=deskripsi, placeholder="Masukkan Deskripsi Destinasi Wisata Anda", key="deskripsi_input")
+            fasilitas_umum = st.text_area("Fasilitas Umum", value=fasilitas_umum, placeholder="Masukkan Fasilitas Umum (toilet, musholla, dll)", key="fasilitas_umum_input")
+            jarak_ibukota = st.text_input("Jarak ke Ibukota Kab/Kota", value=jarak_ibukota, placeholder="Masukkan Jarak (contoh: 5 km atau 30 menit)", key="jarak_ibukota_input")
             rating = st.slider("Rating Potensi (1-10)", 1, 10, value=rating, key="rating_input")
             gambar = st.file_uploader("Upload Gambar Destinasi", type=["jpg", "jpeg", "png"], key="gambar_input")
 
@@ -211,8 +220,8 @@ with tab1:
 
     if submit_destinasi:
         # Validasi semua kolom wajib, termasuk gambar
-        if not all([nama.strip(), kab_kota.strip(), kecamatan.strip(), kelurahan_desa.strip(), deskripsi.strip()]) or gambar is None:
-            show_notification("warning", "⚠️ Harap isi semua kolom wajib sebelum mengirim, termasuk gambar.")
+        if not all([nama.strip(), kab_kota.strip(), kecamatan.strip(), kelurahan_desa.strip(), deskripsi.strip(), pengelola, gambar]):
+            show_notification("warning", "⚠️ Harap isi semua kolom wajib sebelum mengirim, termasuk gambar dan pengelola.")
         else:
             try:
                 if gambar.size > 50 * 1024 * 1024:
@@ -250,10 +259,13 @@ with tab1:
                     else:
                         data = {
                             "Nama": nama,
-                            "Kab_Kota": kab_kota,  # Diperbarui dari Kab/Kota
+                            "Kab_Kota": kab_kota,
                             "Kecamatan": kecamatan,
-                            "Kelurahan_Desa": kelurahan_desa,  # Diperbarui dari Kelurahan/Desa
+                            "Kelurahan_Desa": kelurahan_desa,
                             "Deskripsi": deskripsi,
+                            "Fasilitas_Umum": fasilitas_umum,
+                            "Jarak_Ibukota": jarak_ibukota,
+                            "Pengelola": pengelola,
                             "Rating": rating,
                             "Gambar_URL": gambar_url,
                             "Tanggal_Input": datetime.datetime.now().isoformat()
@@ -300,6 +312,17 @@ with tab2:
         kelurahan_desa = ""
         gambar_industri = None
         bintang_hotel = 0
+        nib_available = None
+        nib = ""
+        chse = None
+        jumlah_bed = 0
+        dapur_halal = None
+        jumlah_kursi = 0
+        sertifikat_halal = None
+        standar_available = None
+        sertifikat_standar = ""
+        trapis_available = None
+        trapis = ""
     else:
         nama_usaha = st.session_state.get("nama_usaha", "")
         jenis_industri = st.session_state.get("jenis_industri", None)
@@ -314,23 +337,58 @@ with tab2:
         kelurahan_desa = st.session_state.get("kelurahan_desa_industri", "")
         gambar_industri = None
         bintang_hotel = st.session_state.get("bintang_hotel", 0)
+        nib_available = st.session_state.get("nib_available", None)
+        nib = st.session_state.get("nib", "")
+        chse = st.session_state.get("chse", None)
+        jumlah_bed = st.session_state.get("jumlah_bed", 0)
+        dapur_halal = st.session_state.get("dapur_halal", None)
+        jumlah_kursi = st.session_state.get("jumlah_kursi", 0)
+        sertifikat_halal = st.session_state.get("sertifikat_halal", None)
+        standar_available = st.session_state.get("standar_available", None)
+        sertifikat_standar = st.session_state.get("sertifikat_standar", "")
+        trapis_available = st.session_state.get("trapis_available", None)
+        trapis = st.session_state.get("trapis", "")
 
     col1, col2 = st.columns(2)
 
     with st.form("form_industri"):
         with col1:
             nama_usaha = st.text_input("Nama Usaha", value=nama_usaha, placeholder="Masukkan Nama Usaha", key="nama_usaha_input")
-            jenis_industri = st.selectbox("Jenis Industri", ["Travel", "Hotel", "Penginapan", "Villa", "Homestay", "Restoran", "Rumah Makan", "Catering", "Spa", "Fitness", "Hiburan Malam"], index=None, placeholder="Pilih Jenis Industri", key="jenis_industri_input")
+            jenis_industri = st.selectbox(
+                "Jenis Industri",
+                ["Travel", "Hotel", "Penginapan", "Villa", "Homestay", "Restoran", "Rumah Makan", "Catering", "Spa", "Hiburan Malam"],
+                index=None,
+                placeholder="Pilih Jenis Industri",
+                key="jenis_industri_input"
+            )
             jumlah_karyawan_pria = st.number_input("Jumlah Karyawan Pria", value=jumlah_karyawan_pria, min_value=0, key="jumlah_karyawan_pria_input")
             jumlah_karyawan_wanita = st.number_input("Jumlah Karyawan Wanita", value=jumlah_karyawan_wanita, min_value=0, key="jumlah_karyawan_wanita_input")
-            jumlah_kamar = None
-            fasilitas = None
+            
+            # Kolom untuk Hotel, Penginapan, Villa, Homestay
             if jenis_industri in ["Hotel", "Penginapan", "Villa", "Homestay"]:
                 jumlah_kamar = st.number_input("Jumlah Kamar", value=jumlah_kamar, min_value=0, key="jumlah_kamar_input")
-                fasilitas = st.text_input("Fasilitas", value=fasilitas, placeholder="Masukkan Fasilitas Tersedia", key="fasilitas_input")
-            bintang_hotel = None
+                jumlah_bed = st.number_input("Jumlah Bed", value=jumlah_bed, min_value=0, key="jumlah_bed_input")
+                fasilitas = st.text_area("Fasilitas", value=fasilitas, placeholder="Masukkan Fasilitas Tersedia (wifi, parkir, dll)", key="fasilitas_input")
+                dapur_halal = st.selectbox("Dapur Halal", ["Ya", "Tidak"], index=None, placeholder="Pilih Status Dapur Halal", key="dapur_halal_input")
+                sertifikat_halal = st.selectbox("Sertifikat Halal", ["Ya", "Tidak"], index=None, placeholder="Pilih Status Sertifikat Halal (opsional)", key="sertifikat_halal_input")
+            
+            # Kolom untuk Hotel
             if jenis_industri == "Hotel":
                 bintang_hotel = st.slider("Jumlah Bintang Hotel (0-5)", 0, 5, value=bintang_hotel, key="bintang_hotel_input")
+            
+            # Kolom untuk Restoran dan Rumah Makan
+            if jenis_industri in ["Restoran", "Rumah Makan"]:
+                jumlah_kursi = st.number_input("Jumlah Kursi", value=jumlah_kursi, min_value=0, key="jumlah_kursi_input")
+                fasilitas = st.text_area("Fasilitas", value=fasilitas, placeholder="Masukkan Fasilitas Tersedia (wifi, parkir, dll)", key="fasilitas_input")
+                sertifikat_halal = st.selectbox("Sertifikat Halal", ["Ya", "Tidak"], index=None, placeholder="Pilih Status Sertifikat Halal (opsional)", key="sertifikat_halal_input")
+            
+            # Kolom untuk Catering
+            if jenis_industri == "Catering":
+                sertifikat_halal = st.selectbox("Sertifikat Halal", ["Ya", "Tidak"], index=None, placeholder="Pilih Status Sertifikat Halal (opsional)", key="sertifikat_halal_input")
+            
+            # Kolom untuk Spa
+            if jenis_industri == "Spa":
+                sertifikat_halal = st.selectbox("Sertifikat Halal", ["Ya", "Tidak"], index=None, placeholder="Pilih Status Sertifikat Halal (opsional)", key="sertifikat_halal_input")
 
         with col2:
             jenis_kontak = st.selectbox("Jenis Kontak", options=["Whatsapp", "Instagram", "Email"], index=None, placeholder="Pilih Jenis Kontak", key="jenis_kontak_input")
@@ -338,6 +396,29 @@ with tab2:
             kab_kota = st.text_input("Kabupaten/Kota", value=kab_kota, placeholder="Masukkan Kabupaten/Kota", key="kab_kota_industri_input")
             kecamatan = st.text_input("Kecamatan", value=kecamatan, placeholder="Masukkan Kecamatan", key="kecamatan_industri_input")
             kelurahan_desa = st.text_input("Kelurahan/Desa", value=kelurahan_desa, placeholder="Masukkan Kelurahan/Desa", key="kelurahan_desa_industri_input")
+            
+            # Kolom NIB untuk Travel, Spa, Catering, Hotel, Penginapan, Villa, Homestay, Restoran, Rumah Makan
+            if jenis_industri in ["Travel", "Spa", "Catering", "Hotel", "Penginapan", "Villa", "Homestay", "Restoran", "Rumah Makan"]:
+                nib_available = st.selectbox("Nomor Induk Berusaha (NIB) Tersedia?", ["Ya", "Tidak"], index=None, placeholder="Pilih Status NIB", key="nib_available_input")
+                if nib_available == "Ya":
+                    nib = st.text_input("Nomor Induk Berusaha (NIB)", value=nib, placeholder="Masukkan NIB", key="nib_input")
+            
+            # Kolom CHSE untuk Hotel, Penginapan, Villa, Homestay, Restoran, Rumah Makan
+            if jenis_industri in ["Hotel", "Penginapan", "Villa", "Homestay", "Restoran", "Rumah Makan"]:
+                chse = st.selectbox("CHSE", ["Ya", "Tidak"], index=None, placeholder="Pilih Status CHSE", key="chse_input")
+            
+            # Kolom Standar untuk Spa
+            if jenis_industri == "Spa":
+                standar_available = st.selectbox("Standar Tersedia?", ["Ya", "Tidak"], index=None, placeholder="Pilih Status Standar", key="standar_available_input")
+                if standar_available == "Ya":
+                    sertifikat_standar = st.text_input("Sertifikat Standar", value=sertifikat_standar, placeholder="Masukkan Sertifikat Standar", key="sertifikat_standar_input")
+            
+            # Kolom Trapis untuk Catering
+            if jenis_industri == "Catering":
+                trapis_available = st.selectbox("Trapis Tersedia?", ["Ya", "Tidak"], index=None, placeholder="Pilih Status Trapis", key="trapis_available_input")
+                if trapis_available == "Ya":
+                    trapis = st.text_input("Trapis", value=trapis, placeholder="Masukkan Trapis", key="trapis_input")
+            
             gambar_industri = st.file_uploader("Upload Gambar Usaha", type=["jpg", "jpeg", "png"], key="gambar_industri_input")
 
         submit_industri = st.form_submit_button("Kirim Data Industri")
@@ -352,8 +433,57 @@ with tab2:
             kecamatan.strip() if kecamatan else "",
             kelurahan_desa.strip() if kelurahan_desa else ""
         ]
+        
+        # Validasi tambahan berdasarkan jenis industri
+        if jenis_industri in ["Hotel", "Penginapan", "Villa", "Homestay"]:
+            required_fields.extend([
+                dapur_halal,
+                nib_available,
+                chse,
+                fasilitas.strip() if fasilitas else "",
+                jumlah_kamar,
+                jumlah_bed
+            ])
+            if nib_available == "Ya":
+                required_fields.append(nib.strip() if nib else "")
+        
+        if jenis_industri in ["Restoran", "Rumah Makan"]:
+            required_fields.extend([
+                nib_available,
+                chse,
+                fasilitas.strip() if fasilitas else "",
+                jumlah_kursi
+            ])
+            if nib_available == "Ya":
+                required_fields.append(nib.strip() if nib else "")
+        
+        if jenis_industri == "Spa":
+            required_fields.extend([
+                nib_available,
+                standar_available
+            ])
+            if nib_available == "Ya":
+                required_fields.append(nib.strip() if nib else "")
+            if standar_available == "Ya":
+                required_fields.append(sertifikat_standar.strip() if sertifikat_standar else "")
+        
+        if jenis_industri == "Catering":
+            required_fields.extend([
+                nib_available,
+                trapis_available
+            ])
+            if nib_available == "Ya":
+                required_fields.append(nib.strip() if nib else "")
+            if trapis_available == "Ya":
+                required_fields.append(trapis.strip() if trapis else "")
+        
+        if jenis_industri == "Travel":
+            required_fields.append(nib_available)
+            if nib_available == "Ya":
+                required_fields.append(nib.strip() if nib else "")
+
         if not all(required_fields):
-            show_notification("warning", "⚠️ Semua kolom wajib diisi. Gambar opsional.")
+            show_notification("warning", "⚠️ Semua kolom wajib diisi. Gambar dan Sertifikat Halal opsional.")
         else:
             try:
                 check_industri = requests.get(
@@ -397,15 +527,26 @@ with tab2:
                         "Jenis_Industri": jenis_industri,
                         "Karyawan_Pria": jumlah_karyawan_pria,
                         "Karyawan_Wanita": jumlah_karyawan_wanita,
-                        "Jumlah_Kamar": jumlah_kamar,
-                        "Fasilitas": fasilitas,
+                        "Jumlah_Kamar": jumlah_kamar if jenis_industri in ["Hotel", "Penginapan", "Villa", "Homestay"] else None,
+                        "Jumlah_Bed": jumlah_bed if jenis_industri in ["Hotel", "Penginapan", "Villa", "Homestay"] else None,
+                        "Fasilitas": fasilitas if jenis_industri in ["Hotel", "Penginapan", "Villa", "Homestay", "Restoran", "Rumah Makan"] else None,
                         "Kab_Kota": kab_kota,
                         "Kecamatan": kecamatan,
                         "Kelurahan_Desa": kelurahan_desa,
                         "Jenis_Kontak": jenis_kontak,
                         "Kontak": kontak,
                         "Gambar_URL": gambar_url,
-                        "Bintang_Hotel": bintang_hotel,
+                        "Bintang_Hotel": bintang_hotel if jenis_industri == "Hotel" else None,
+                        "NIB_Available": nib_available == "Ya" if nib_available else None,
+                        "NIB": nib if nib_available == "Ya" else None,
+                        "CHSE": chse == "Ya" if chse else None,
+                        "Dapur_Halal": dapur_halal == "Ya" if dapur_halal else None,
+                        "Jumlah_Kursi": jumlah_kursi if jenis_industri in ["Restoran", "Rumah Makan"] else None,
+                        "Sertifikat_Halal": sertifikat_halal == "Ya" if sertifikat_halal else None,
+                        "Standar_Available": standar_available == "Ya" if standar_available else None,
+                        "Sertifikat_Standar": sertifikat_standar if standar_available == "Ya" else None,
+                        "Trapis_Available": trapis_available == "Ya" if trapis_available else None,
+                        "Trapis": trapis if trapis_available == "Ya" else None,
                         "Tanggal_Input": datetime.datetime.now().isoformat()
                     }
                     try:
@@ -450,11 +591,13 @@ with tab3:
             st.dataframe(df)
 
             # Definisikan kolom yang diharapkan untuk masing-masing tabel
-            destinasi_columns = set(["Nama", "Kab_Kota", "Kecamatan", "Kelurahan_Desa", "Deskripsi", "Rating"])
+            destinasi_columns = set(["Nama", "Kab_Kota", "Kecamatan", "Kelurahan_Desa", "Deskripsi", "Fasilitas_Umum", "Jarak_Ibukota", "Pengelola", "Rating"])
             industri_columns = set([
                 "Nama_Usaha", "Jenis_Industri", "Kab_Kota", "Kecamatan", "Kelurahan_Desa",
-                "Karyawan_Pria", "Karyawan_Wanita", "Bintang_Hotel", "Jumlah_Kamar", "Fasilitas",
-                "Jenis_Kontak", "Kontak"
+                "Karyawan_Pria", "Karyawan_Wanita", "Bintang_Hotel", "Jumlah_Kamar", "Jumlah_Bed",
+                "Fasilitas", "Jenis_Kontak", "Kontak", "NIB_Available", "NIB", "CHSE",
+                "Dapur_Halal", "Jumlah_Kursi", "Sertifikat_Halal", "Standar_Available",
+                "Sertifikat_Standar", "Trapis_Available", "Trapis"
             ])
 
             # Ambil kolom dari file yang di-upload
@@ -471,6 +614,9 @@ with tab3:
                     "Kecamatan": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
                     "Kelurahan_Desa": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
                     "Deskripsi": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
+                    "Fasilitas_Umum": lambda x: pd.isna(x) or isinstance(x, str),
+                    "Jarak_Ibukota": lambda x: pd.isna(x) or isinstance(x, str),
+                    "Pengelola": lambda x: not pd.isna(x) and isinstance(x, str) and x in ["Pemerintah", "Swasta", "Lainnya"],
                     "Rating": lambda x: not pd.isna(x) and isinstance(x, (int, float)) and 1 <= x <= 10
                 }
             elif industri_columns.issubset(uploaded_columns):
@@ -479,7 +625,7 @@ with tab3:
                 required_columns = list(industri_columns)
                 validation_rules = {
                     "Nama_Usaha": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Jenis_Industri": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
+                    "Jenis_Industri": lambda x: not pd.isna(x) and isinstance(x, str) and x in ["Travel", "Hotel", "Penginapan", "Villa", "Homestay", "Restoran", "Rumah Makan", "Catering", "Spa", "Hiburan Malam"],
                     "Kab_Kota": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
                     "Kecamatan": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
                     "Kelurahan_Desa": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
@@ -487,9 +633,20 @@ with tab3:
                     "Karyawan_Wanita": lambda x: not pd.isna(x) and isinstance(x, (int, float)) and x >= 0,
                     "Bintang_Hotel": lambda x: pd.isna(x) or (isinstance(x, (int, float)) and x >= 0),
                     "Jumlah_Kamar": lambda x: pd.isna(x) or (isinstance(x, (int, float)) and x >= 0),
+                    "Jumlah_Bed": lambda x: pd.isna(x) or (isinstance(x, (int, float)) and x >= 0),
                     "Fasilitas": lambda x: pd.isna(x) or isinstance(x, str),
                     "Jenis_Kontak": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Kontak": lambda x: not pd.isna(x) and str(x).strip() != ""
+                    "Kontak": lambda x: not pd.isna(x) and str(x).strip() != "",
+                    "NIB_Available": lambda x: pd.isna(x) or x in [True, False],
+                    "NIB": lambda x: pd.isna(x) or isinstance(x, str),
+                    "CHSE": lambda x: pd.isna(x) or x in [True, False],
+                    "Dapur_Halal": lambda x: pd.isna(x) or x in [True, False],
+                    "Jumlah_Kursi": lambda x: pd.isna(x) or (isinstance(x, (int, float)) and x >= 0),
+                    "Sertifikat_Halal": lambda x: pd.isna(x) or x in [True, False],
+                    "Standar_Available": lambda x: pd.isna(x) or x in [True, False],
+                    "Sertifikat_Standar": lambda x: pd.isna(x) or isinstance(x, str),
+                    "Trapis_Available": lambda x: pd.isna(x) or x in [True, False],
+                    "Trapis": lambda x: pd.isna(x) or isinstance(x, str)
                 }
             else:
                 show_notification("error", "❌ Kolom file tidak sesuai dengan template Destinasi (" + ", ".join(destinasi_columns) + ") atau Industri (" + ", ".join(industri_columns) + ")")
@@ -506,6 +663,38 @@ with tab3:
                         value = row[col]
                         if not rule(value):
                             validation_errors.append(f"Baris {index + 2}, Kolom {col}: Nilai tidak valid ({value})")
+                    # Validasi tambahan untuk Industri
+                    if table_name == "Industri":
+                        jenis_industri = row["Jenis_Industri"]
+                        if jenis_industri in ["Hotel", "Penginapan", "Villa", "Homestay"]:
+                            if pd.isna(row["Dapur_Halal"]) or pd.isna(row["NIB_Available"]) or pd.isna(row["CHSE"]) or pd.isna(row["Fasilitas"]) or pd.isna(row["Jumlah_Kamar"]) or pd.isna(row["Jumlah_Bed"]):
+                                validation_errors.append(f"Baris {index + 2}: Kolom Dapur_Halal, NIB_Available, CHSE, Fasilitas, Jumlah_Kamar, dan Jumlah_Bed wajib diisi untuk {jenis_industri}")
+                            if row["NIB_Available"] and pd.isna(row["NIB"]):
+                                validation_errors.append(f"Baris {index + 2}: Kolom NIB wajib diisi jika NIB_Available adalah True")
+                        if jenis_industri in ["Restoran", "Rumah Makan"]:
+                            if pd.isna(row["NIB_Available"]) or pd.isna(row["CHSE"]) or pd.isna(row["Fasilitas"]) or pd.isna(row["Jumlah_Kursi"]):
+                                validation_errors.append(f"Baris {index + 2}: Kolom NIB_Available, CHSE, Fasilitas, dan Jumlah_Kursi wajib diisi untuk {jenis_industri}")
+                            if row["NIB_Available"] and pd.isna(row["NIB"]):
+                                validation_errors.append(f"Baris {index + 2}: Kolom NIB wajib diisi jika NIB_Available adalah True")
+                        if jenis_industri == "Spa":
+                            if pd.isna(row["NIB_Available"]) or pd.isna(row["Standar_Available"]):
+                                validation_errors.append(f"Baris {index + 2}: Kolom NIB_Available dan Standar_Available wajib diisi untuk Spa")
+                            if row["NIB_Available"] and pd.isna(row["NIB"]):
+                                validation_errors.append(f"Baris {index + 2}: Kolom NIB wajib diisi jika NIB_Available adalah True")
+                            if row["Standar_Available"] and pd.isna(row["Sertifikat_Standar"]):
+                                validation_errors.append(f"Baris {index + 2}: Kolom Sertifikat_Standar wajib diisi jika Standar_Available adalah True")
+                        if jenis_industri == "Catering":
+                            if pd.isna(row["NIB_Available"]) or pd.isna(row["Trapis_Available"]):
+                                validation_errors.append(f"Baris {index + 2}: Kolom NIB_Available dan Trapis_Available wajib diisi untuk Catering")
+                            if row["NIB_Available"] and pd.isna(row["NIB"]):
+                                validation_errors.append(f"Baris {index + 2}: Kolom NIB wajib diisi jika NIB_Available adalah True")
+                            if row["Trapis_Available"] and pd.isna(row["Trapis"]):
+                                validation_errors.append(f"Baris {index + 2}: Kolom Trapis wajib diisi jika Trapis_Available adalah True")
+                        if jenis_industri == "Travel":
+                            if pd.isna(row["NIB_Available"]):
+                                validation_errors.append(f"Baris {index + 2}: Kolom NIB_Available wajib diisi untuk Travel")
+                            if row["NIB_Available"] and pd.isna(row["NIB"]):
+                                validation_errors.append(f"Baris {index + 2}: Kolom NIB wajib diisi jika NIB_Available adalah True")
                 
                 if validation_errors:
                     show_notification("error", "❌ Validasi gagal:\n" + "\n".join(validation_errors))
@@ -520,8 +709,12 @@ with tab3:
                             df["Karyawan_Wanita"] = df["Karyawan_Wanita"].astype("Int64")
                             if "Jumlah_Kamar" in df.columns:
                                 df["Jumlah_Kamar"] = df["Jumlah_Kamar"].astype("Int64")
+                            if "Jumlah_Bed" in df.columns:
+                                df["Jumlah_Bed"] = df["Jumlah_Bed"].astype("Int64")
                             if "Bintang_Hotel" in df.columns:
                                 df["Bintang_Hotel"] = df["Bintang_Hotel"].astype("Int64")
+                            if "Jumlah_Kursi" in df.columns:
+                                df["Jumlah_Kursi"] = df["Jumlah_Kursi"].astype("Int64")
 
                         df = df.where(pd.notnull(df), None)  # Replace NaN with None
                         data = df.to_dict(orient="records")
@@ -564,7 +757,7 @@ with tab3:
     st.markdown("💾 Belum punya template? Silakan download:")
     col1, col2 = st.columns(2)
     with col1:
-        destinasi_template = pd.DataFrame(columns=["Nama", "Kab_Kota", "Kecamatan", "Kelurahan_Desa", "Deskripsi", "Rating"])
+        destinasi_template = pd.DataFrame(columns=["Nama", "Kab_Kota", "Kecamatan", "Kelurahan_Desa", "Deskripsi", "Fasilitas_Umum", "Jarak_Ibukota", "Pengelola", "Rating"])
         buffer_destinasi = io.BytesIO()
         destinasi_template.to_excel(buffer_destinasi, index=False, engine='openpyxl')
         buffer_destinasi.seek(0)
@@ -578,8 +771,10 @@ with tab3:
     with col2:
         industri_template = pd.DataFrame(columns=[
             "Nama_Usaha", "Jenis_Industri", "Kab_Kota", "Kecamatan", "Kelurahan_Desa",
-            "Karyawan_Pria", "Karyawan_Wanita", "Bintang_Hotel", "Jumlah_Kamar", "Fasilitas",
-            "Jenis_Kontak", "Kontak"
+            "Karyawan_Pria", "Karyawan_Wanita", "Bintang_Hotel", "Jumlah_Kamar", "Jumlah_Bed",
+            "Fasilitas", "Jenis_Kontak", "Kontak", "NIB_Available", "NIB", "CHSE",
+            "Dapur_Halal", "Jumlah_Kursi", "Sertifikat_Halal", "Standar_Available",
+            "Sertifikat_Standar", "Trapis_Available", "Trapis"
         ])
         buffer_industri = io.BytesIO()
         industri_template.to_excel(buffer_industri, index=False, engine='openpyxl')
@@ -590,6 +785,7 @@ with tab3:
             file_name="template_industri.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+
 # =======================
 # 📈 PROGRES UPLOAD DATA (Hanya untuk Admin)
 # =======================
