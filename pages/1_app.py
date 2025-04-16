@@ -63,7 +63,7 @@ if 'user_email' not in st.session_state or 'kabupaten' not in st.session_state:
                 st.session_state.pop('user_email', None)
                 st.session_state.pop('kabupaten', None)
                 st.session_state.pop('auth_token', None)
-                st.error("❌ Sesi tidak valid. Silakan login kembali.")
+                st.error("Sesi tidak valid. Silakan login kembali.")
                 st.switch_page("pages/0_login.py")
                 st.stop()
         else:
@@ -71,12 +71,12 @@ if 'user_email' not in st.session_state or 'kabupaten' not in st.session_state:
             st.session_state.pop('user_email', None)
             st.session_state.pop('kabupaten', None)
             st.session_state.pop('auth_token', None)
-            st.error("❌ Sesi telah kedaluwarsa. Silakan login kembali.")
+            st.error("Sesi telah kedaluwarsa. Silakan login kembali.")
             st.switch_page("pages/0_login.py")
             st.stop()
     else:
         # Jika tidak ada token, arahkan ke login
-        st.error("❌ Anda harus login terlebih dahulu!")
+        st.error("Anda harus login terlebih dahulu!")
         st.switch_page("pages/0_login.py")
         st.stop()
 
@@ -87,7 +87,7 @@ try:
     SUPABASE_URL = st.secrets["SUPABASE_URL"]
     SUPABASE_API_KEY = st.secrets["SUPABASE_API_KEY"]
 except KeyError as e:
-    st.error(f"❌ Missing secret: {e}")
+    st.error(f"Missing secret: {e}")
     st.stop()
 
 BUCKET_NAME = "gambar.pariwisata"
@@ -221,11 +221,11 @@ with tab1:
     if submit_destinasi:
         # Validasi semua kolom wajib, termasuk gambar
         if not all([nama.strip(), kab_kota.strip(), kecamatan.strip(), kelurahan_desa.strip(), deskripsi.strip(), pengelola, gambar]):
-            show_notification("warning", "⚠️ Harap isi semua kolom wajib sebelum mengirim, termasuk gambar dan pengelola.")
+            show_notification("warning", "Harap isi semua kolom wajib sebelum mengirim, termasuk gambar dan pengelola.")
         else:
             try:
                 if gambar.size > 50 * 1024 * 1024:
-                    show_notification("warning", "❌ Ukuran file terlalu besar! Maksimum 50MB.")
+                    show_notification("warning", "Ukuran file terlalu besar! Maksimum 50MB.")
                 else:
                     gambar_url = None
                     file_name = f"{nama.replace(' ', '_')}_{gambar.name}"
@@ -247,15 +247,15 @@ with tab1:
                             gambar_url = f"{SUPABASE_STORAGE_PUBLIC_URL}/{encoded_file_path}"
                             show_notification("info", f"URL Gambar: {gambar_url}")
                         else:
-                            show_notification("error", f"❌ Gagal upload gambar: {res_upload.text}")
+                            show_notification("error", f"Gagal upload gambar: {res_upload.text}")
                             gambar_url = None
                     except requests.RequestException as e:
-                        show_notification("error", f"❌ Gagal upload gambar: {e}")
+                        show_notification("error", f"Gagal upload gambar: {e}")
                         gambar_url = None
 
                     # Jika gambar gagal diunggah, hentikan proses
                     if gambar_url is None:
-                        show_notification("error", "❌ Gagal mengunggah gambar. Data tidak dikirim.")
+                        show_notification("error", "Gagal mengunggah gambar. Data tidak dikirim.")
                     else:
                         data = {
                             "Nama": nama,
@@ -281,15 +281,15 @@ with tab1:
                                 }
                             )
                             if res.status_code == 201:
-                                show_notification("success", "✅ Data berhasil dikirim ke Supabase!")
+                                show_notification("success", "Data berhasil dikirim ke Supabase!")
                                 st.session_state.form_destinasi_reset = True
                                 st.rerun()
                             else:
-                                show_notification("error", f"❌ Gagal kirim data: {res.text}")
+                                show_notification("error", f"Gagal kirim data: {res.text}")
                         except requests.RequestException as e:
-                            show_notification("error", f"❌ Gagal kirim data ke Supabase: {e}")
+                            show_notification("error", f"Gagal kirim data ke Supabase: {e}")
             except Exception as e:
-                show_notification("error", f"❌ Terjadi kesalahan: {e}")
+                show_notification("error", f"Terjadi kesalahan: {e}")
 
 # =======================
 # 🏨 FORM INDUSTRI
@@ -323,6 +323,7 @@ with tab2:
         sertifikat_standar = ""
         trapis_available = None
         trapis = ""
+        jenis_hiburan = None
     else:
         nama_usaha = st.session_state.get("nama_usaha", "")
         jenis_industri = st.session_state.get("jenis_industri", None)
@@ -348,6 +349,7 @@ with tab2:
         sertifikat_standar = st.session_state.get("sertifikat_standar", "")
         trapis_available = st.session_state.get("trapis_available", None)
         trapis = st.session_state.get("trapis", "")
+        jenis_hiburan = st.session_state.get("jenis_hiburan", None)
 
     col1, col2 = st.columns(2)
 
@@ -356,7 +358,7 @@ with tab2:
             nama_usaha = st.text_input("Nama Usaha", value=nama_usaha, placeholder="Masukkan Nama Usaha", key="nama_usaha_input")
             jenis_industri = st.selectbox(
                 "Jenis Industri",
-                ["Travel", "Hotel", "Penginapan", "Villa", "Homestay", "Restoran", "Rumah Makan", "Catering", "Spa", "Hiburan Malam"],
+                ["Travel", "Hotel", "Wisma", "Villa", "Homestay", "Restoran", "Rumah Makan", "Catering", "Spa", "Usaha Hiburan"],
                 index=None,
                 placeholder="Pilih Jenis Industri",
                 key="jenis_industri_input"
@@ -364,8 +366,8 @@ with tab2:
             jumlah_karyawan_pria = st.number_input("Jumlah Karyawan Pria", value=jumlah_karyawan_pria, min_value=0, key="jumlah_karyawan_pria_input")
             jumlah_karyawan_wanita = st.number_input("Jumlah Karyawan Wanita", value=jumlah_karyawan_wanita, min_value=0, key="jumlah_karyawan_wanita_input")
             
-            # Kolom untuk Hotel, Penginapan, Villa, Homestay
-            if jenis_industri in ["Hotel", "Penginapan", "Villa", "Homestay"]:
+            # Kolom untuk Hotel, Wisma, Villa, Homestay
+            if jenis_industri in ["Hotel", "Wisma", "Villa", "Homestay"]:
                 jumlah_kamar = st.number_input("Jumlah Kamar", value=jumlah_kamar, min_value=0, key="jumlah_kamar_input")
                 jumlah_bed = st.number_input("Jumlah Bed", value=jumlah_bed, min_value=0, key="jumlah_bed_input")
                 fasilitas = st.text_area("Fasilitas", value=fasilitas, placeholder="Masukkan Fasilitas Tersedia (wifi, parkir, dll)", key="fasilitas_input")
@@ -389,6 +391,16 @@ with tab2:
             # Kolom untuk Spa
             if jenis_industri == "Spa":
                 sertifikat_halal = st.selectbox("Sertifikat Halal", ["Ya", "Tidak"], index=None, placeholder="Pilih Status Sertifikat Halal (opsional)", key="sertifikat_halal_input")
+            
+            # Kolom untuk Usaha Hiburan
+            if jenis_industri == "Usaha Hiburan":
+                jenis_hiburan = st.selectbox(
+                    "Jenis Hiburan",
+                    ["Club Malam", "Karaoke", "Diskotik", "Billiard"],
+                    index=None,
+                    placeholder="Pilih Jenis Hiburan",
+                    key="jenis_hiburan_input"
+                )
 
         with col2:
             jenis_kontak = st.selectbox("Jenis Kontak", options=["Whatsapp", "Instagram", "Email"], index=None, placeholder="Pilih Jenis Kontak", key="jenis_kontak_input")
@@ -397,18 +409,18 @@ with tab2:
             kecamatan = st.text_input("Kecamatan", value=kecamatan, placeholder="Masukkan Kecamatan", key="kecamatan_industri_input")
             kelurahan_desa = st.text_input("Kelurahan/Desa", value=kelurahan_desa, placeholder="Masukkan Kelurahan/Desa", key="kelurahan_desa_industri_input")
             
-            # Kolom NIB untuk Travel, Spa, Catering, Hotel, Penginapan, Villa, Homestay, Restoran, Rumah Makan
-            if jenis_industri in ["Travel", "Spa", "Catering", "Hotel", "Penginapan", "Villa", "Homestay", "Restoran", "Rumah Makan"]:
+            # Kolom NIB untuk Travel, Spa, Catering, Hotel, Wisma, Villa, Homestay, Restoran, Rumah Makan, Usaha Hiburan
+            if jenis_industri in ["Travel", "Spa", "Catering", "Hotel", "Wisma", "Villa", "Homestay", "Restoran", "Rumah Makan", "Usaha Hiburan"]:
                 nib_available = st.selectbox("Nomor Induk Berusaha (NIB) Tersedia?", ["Ya", "Tidak"], index=None, placeholder="Pilih Status NIB", key="nib_available_input")
                 if nib_available == "Ya":
                     nib = st.text_input("Nomor Induk Berusaha (NIB)", value=nib, placeholder="Masukkan NIB", key="nib_input")
             
-            # Kolom CHSE untuk Hotel, Penginapan, Villa, Homestay, Restoran, Rumah Makan
-            if jenis_industri in ["Hotel", "Penginapan", "Villa", "Homestay", "Restoran", "Rumah Makan"]:
+            # Kolom CHSE untuk Hotel, Wisma, Villa, Homestay, Restoran, Rumah Makan
+            if jenis_industri in ["Hotel", "Wisma", "Villa", "Homestay", "Restoran", "Rumah Makan"]:
                 chse = st.selectbox("CHSE", ["Ya", "Tidak"], index=None, placeholder="Pilih Status CHSE", key="chse_input")
             
-            # Kolom Standar untuk Spa
-            if jenis_industri == "Spa":
+            # Kolom Standar untuk Spa dan Usaha Hiburan
+            if jenis_industri in ["Spa", "Usaha Hiburan"]:
                 standar_available = st.selectbox("Standar Tersedia?", ["Ya", "Tidak"], index=None, placeholder="Pilih Status Standar", key="standar_available_input")
                 if standar_available == "Ya":
                     sertifikat_standar = st.text_input("Sertifikat Standar", value=sertifikat_standar, placeholder="Masukkan Sertifikat Standar", key="sertifikat_standar_input")
@@ -435,7 +447,7 @@ with tab2:
         ]
         
         # Validasi tambahan berdasarkan jenis industri
-        if jenis_industri in ["Hotel", "Penginapan", "Villa", "Homestay"]:
+        if jenis_industri in ["Hotel", "Wisma", "Villa", "Homestay"]:
             required_fields.extend([
                 dapur_halal,
                 nib_available,
@@ -481,9 +493,20 @@ with tab2:
             required_fields.append(nib_available)
             if nib_available == "Ya":
                 required_fields.append(nib.strip() if nib else "")
+        
+        if jenis_industri == "Usaha Hiburan":
+            required_fields.extend([
+                nib_available,
+                standar_available,
+                jenis_hiburan
+            ])
+            if nib_available == "Ya":
+                required_fields.append(nib.strip() if nib else "")
+            if standar_available == "Ya":
+                required_fields.append(sertifikat_standar.strip() if sertifikat_standar else "")
 
         if not all(required_fields):
-            show_notification("warning", "⚠️ Semua kolom wajib diisi. Gambar dan Sertifikat Halal opsional.")
+            show_notification("warning", "Semua kolom wajib diisi. Gambar dan Sertifikat Halal opsional.")
         else:
             try:
                 check_industri = requests.get(
@@ -491,9 +514,9 @@ with tab2:
                     headers=headers
                 )
                 if check_industri.status_code == 200 and check_industri.json():
-                    show_notification("warning", "⚠️ Data dengan nama usaha ini sudah ada di database!")
+                    show_notification("warning", "Data dengan nama usaha ini sudah ada di database!")
                 elif gambar_industri and gambar_industri.size > 50 * 1024 * 1024:
-                    show_notification("warning", "❌ Ukuran file terlalu besar! Maksimum 50MB.")
+                    show_notification("warning", "Ukuran file terlalu besar! Maksimum 50MB.")
                 else:
                     gambar_url = None
                     if gambar_industri:
@@ -516,10 +539,10 @@ with tab2:
                                 gambar_url = f"{SUPABASE_STORAGE_PUBLIC_URL}/{encoded_file_path}"
                                 show_notification("info", f"URL Gambar: {gambar_url}")
                             else:
-                                show_notification("error", f"❌ Gagal upload gambar: {res_upload.text}")
+                                show_notification("error", f"Gagal upload gambar: {res_upload.text}")
                                 gambar_url = None
                         except requests.RequestException as e:
-                            show_notification("error", f"❌ Gagal upload gambar: {e}")
+                            show_notification("error", f"Gagal upload gambar: {e}")
                             gambar_url = None
 
                     data_industri = {
@@ -527,9 +550,9 @@ with tab2:
                         "Jenis_Industri": jenis_industri,
                         "Karyawan_Pria": jumlah_karyawan_pria,
                         "Karyawan_Wanita": jumlah_karyawan_wanita,
-                        "Jumlah_Kamar": jumlah_kamar if jenis_industri in ["Hotel", "Penginapan", "Villa", "Homestay"] else None,
-                        "Jumlah_Bed": jumlah_bed if jenis_industri in ["Hotel", "Penginapan", "Villa", "Homestay"] else None,
-                        "Fasilitas": fasilitas if jenis_industri in ["Hotel", "Penginapan", "Villa", "Homestay", "Restoran", "Rumah Makan"] else None,
+                        "Jumlah_Kamar": jumlah_kamar if jenis_industri in ["Hotel", "Wisma", "Villa", "Homestay"] else None,
+                        "Jumlah_Bed": jumlah_bed if jenis_industri in ["Hotel", "Wisma", "Villa", "Homestay"] else None,
+                        "Fasilitas": fasilitas if jenis_industri in ["Hotel", "Wisma", "Villa", "Homestay", "Restoran", "Rumah Makan"] else None,
                         "Kab_Kota": kab_kota,
                         "Kecamatan": kecamatan,
                         "Kelurahan_Desa": kelurahan_desa,
@@ -547,6 +570,7 @@ with tab2:
                         "Sertifikat_Standar": sertifikat_standar if standar_available == "Ya" else None,
                         "Trapis_Available": trapis_available == "Ya" if trapis_available else None,
                         "Trapis": trapis if trapis_available == "Ya" else None,
+                        "Jenis_Hiburan": jenis_hiburan if jenis_industri == "Usaha Hiburan" else None,
                         "Tanggal_Input": datetime.datetime.now().isoformat()
                     }
                     try:
@@ -560,15 +584,15 @@ with tab2:
                             }
                         )
                         if res.status_code == 201:
-                            show_notification("success", "✅ Data industri berhasil dikirim ke Supabase!")
+                            show_notification("success", "Data industri berhasil dikirim ke Supabase!")
                             st.session_state.clear_form_industri = True
                             st.rerun()
                         else:
-                            show_notification("error", f"❌ Gagal kirim data: {res.text}")
+                            show_notification("error", f"Gagal kirim data: {res.text}")
                     except requests.RequestException as e:
-                        show_notification("error", f"❌ Gagal kirim data ke Supabase: {e}")
+                        show_notification("error", f"Gagal kirim data ke Supabase: {e}")
             except Exception as e:
-                show_notification("error", f"❌ Terjadi kesalahan: {e}")
+                show_notification("error", f"Terjadi kesalahan: {e}")
 
 # =======================
 # 📁 UPLOAD EXCEL/CSV
@@ -597,7 +621,7 @@ with tab3:
                 "Karyawan_Pria", "Karyawan_Wanita", "Bintang_Hotel", "Jumlah_Kamar", "Jumlah_Bed",
                 "Fasilitas", "Jenis_Kontak", "Kontak", "NIB_Available", "NIB", "CHSE",
                 "Dapur_Halal", "Jumlah_Kursi", "Sertifikat_Halal", "Standar_Available",
-                "Sertifikat_Standar", "Trapis_Available", "Trapis"
+                "Sertifikat_Standar", "Trapis_Available", "Trapis", "Jenis_Hiburan"
             ])
 
             # Ambil kolom dari file yang di-upload
@@ -625,7 +649,7 @@ with tab3:
                 required_columns = list(industri_columns)
                 validation_rules = {
                     "Nama_Usaha": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Jenis_Industri": lambda x: not pd.isna(x) and isinstance(x, str) and x in ["Travel", "Hotel", "Penginapan", "Villa", "Homestay", "Restoran", "Rumah Makan", "Catering", "Spa", "Hiburan Malam"],
+                    "Jenis_Industri": lambda x: not pd.isna(x) and isinstance(x, str) and x in ["Travel", "Hotel", "Wisma", "Villa", "Homestay", "Restoran", "Rumah Makan", "Catering", "Spa", "Usaha Hiburan"],
                     "Kab_Kota": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
                     "Kecamatan": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
                     "Kelurahan_Desa": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
@@ -646,10 +670,11 @@ with tab3:
                     "Standar_Available": lambda x: pd.isna(x) or x in [True, False],
                     "Sertifikat_Standar": lambda x: pd.isna(x) or isinstance(x, str),
                     "Trapis_Available": lambda x: pd.isna(x) or x in [True, False],
-                    "Trapis": lambda x: pd.isna(x) or isinstance(x, str)
+                    "Trapis": lambda x: pd.isna(x) or isinstance(x, str),
+                    "Jenis_Hiburan": lambda x: pd.isna(x) or x in ["Club Malam", "Karaoke", "Diskotik", "Billiard", ""]
                 }
             else:
-                show_notification("error", "❌ Kolom file tidak sesuai dengan template Destinasi (" + ", ".join(destinasi_columns) + ") atau Industri (" + ", ".join(industri_columns) + ")")
+                show_notification("error", "Kolom file tidak sesuai dengan template Destinasi (" + ", ".join(destinasi_columns) + ") atau Industri (" + ", ".join(industri_columns) + ")")
                 table_name = None
                 jenis_data = None
                 required_columns = []
@@ -666,7 +691,7 @@ with tab3:
                     # Validasi tambahan untuk Industri
                     if table_name == "Industri":
                         jenis_industri = row["Jenis_Industri"]
-                        if jenis_industri in ["Hotel", "Penginapan", "Villa", "Homestay"]:
+                        if jenis_industri in ["Hotel", "Wisma", "Villa", "Homestay"]:
                             if pd.isna(row["Dapur_Halal"]) or pd.isna(row["NIB_Available"]) or pd.isna(row["CHSE"]) or pd.isna(row["Fasilitas"]) or pd.isna(row["Jumlah_Kamar"]) or pd.isna(row["Jumlah_Bed"]):
                                 validation_errors.append(f"Baris {index + 2}: Kolom Dapur_Halal, NIB_Available, CHSE, Fasilitas, Jumlah_Kamar, dan Jumlah_Bed wajib diisi untuk {jenis_industri}")
                             if row["NIB_Available"] and pd.isna(row["NIB"]):
@@ -695,11 +720,18 @@ with tab3:
                                 validation_errors.append(f"Baris {index + 2}: Kolom NIB_Available wajib diisi untuk Travel")
                             if row["NIB_Available"] and pd.isna(row["NIB"]):
                                 validation_errors.append(f"Baris {index + 2}: Kolom NIB wajib diisi jika NIB_Available adalah True")
+                        if jenis_industri == "Usaha Hiburan":
+                            if pd.isna(row["NIB_Available"]) or pd.isna(row["Standar_Available"]) or pd.isna(row["Jenis_Hiburan"]):
+                                validation_errors.append(f"Baris {index + 2}: Kolom NIB_Available, Standar_Available, dan Jenis_Hiburan wajib diisi untuk Usaha Hiburan")
+                            if row["NIB_Available"] and pd.isna(row["NIB"]):
+                                validation_errors.append(f"Baris {index + 2}: Kolom NIB wajib diisi jika NIB_Available adalah True")
+                            if row["Standar_Available"] and pd.isna(row["Sertifikat_Standar"]):
+                                validation_errors.append(f"Baris {index + 2}: Kolom Sertifikat_Standar wajib diisi jika Standar_Available adalah True")
                 
                 if validation_errors:
-                    show_notification("error", "❌ Validasi gagal:\n" + "\n".join(validation_errors))
+                    show_notification("error", "Validasi gagal:\n" + "\n".join(validation_errors))
                 else:
-                    show_notification("success", f"✅ Struktur file valid untuk {jenis_data}! Siap dikirim ke database.")
+                    show_notification("success", f"Struktur file valid untuk {jenis_data}! Siap dikirim ke database.")
 
                     if st.button(f"Kirim Data ke Database"):
                         df["Tanggal_Input"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -731,12 +763,12 @@ with tab3:
                                 }
                             )
                             if res.status_code == 201:
-                                show_notification("success", "✅ Data berhasil dikirim ke Supabase!")
+                                show_notification("success", "Data berhasil dikirim ke Supabase!")
                             else:
                                 error_message = res.json().get("message", res.text) if res.text else "Unknown error"
-                                show_notification("error", f"❌ Gagal kirim data: {res.status_code} - {error_message}")
+                                show_notification("error", f"Gagal kirim data: {res.status_code} - {error_message}")
                         except requests.RequestException as e:
-                            show_notification("error", f"❌ Gagal kirim data ke Supabase: {str(e)}")
+                            show_notification("error", f"Gagal kirim data ke Supabase: {str(e)}")
 
             # Download ulang file sebagai Excel
             towrite = io.BytesIO()
@@ -750,9 +782,9 @@ with tab3:
             )
 
         except UnicodeDecodeError:
-            show_notification("error", "❌ Gagal membaca file CSV: Encoding tidak didukung. Harap gunakan encoding UTF-8.")
+            show_notification("error", "Gagal membaca file CSV: Encoding tidak didukung. Harap gunakan encoding UTF-8.")
         except Exception as e:
-            show_notification("error", f"❌ Terjadi kesalahan saat membaca file: {str(e)}")
+            show_notification("error", f"Terjadi kesalahan saat membaca file: {str(e)}")
 
     st.markdown("💾 Belum punya template? Silakan download:")
     col1, col2 = st.columns(2)
@@ -774,7 +806,7 @@ with tab3:
             "Karyawan_Pria", "Karyawan_Wanita", "Bintang_Hotel", "Jumlah_Kamar", "Jumlah_Bed",
             "Fasilitas", "Jenis_Kontak", "Kontak", "NIB_Available", "NIB", "CHSE",
             "Dapur_Halal", "Jumlah_Kursi", "Sertifikat_Halal", "Standar_Available",
-            "Sertifikat_Standar", "Trapis_Available", "Trapis"
+            "Sertifikat_Standar", "Trapis_Available", "Trapis", "Jenis_Hiburan"
         ])
         buffer_industri = io.BytesIO()
         industri_template.to_excel(buffer_industri, index=False, engine='openpyxl')
@@ -795,7 +827,7 @@ if is_admin:
 
         kabupaten_list = get_all_kabupaten()
         if not kabupaten_list:
-            st.error("❌ Gagal mengambil daftar kabupaten/kota.")
+            st.error("Gagal mengambil daftar kabupaten/kota.")
             st.stop()
 
         destinasi_counts = get_count_by_kabupaten("Destinasi%20Wisata", kabupaten_list, kab_column="Kab_Kota")
