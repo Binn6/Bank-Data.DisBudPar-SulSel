@@ -2,6 +2,7 @@ import requests
 import time
 import streamlit as st
 import urllib.parse
+import re
 
 def get_kabupaten_by_email(email, retries=5, delay=1):
     try:
@@ -97,18 +98,22 @@ def get_count_by_kabupaten(table_name, kabupaten_list, kab_column="Kab_Kota"):
 
     for kab in kabupaten_list:
         try:
-            # Normalisasi nama kabupaten
-            normalized_kab = kab.lower().replace("kabupaten ", "").replace("kab. ", "").strip()
+            # Normalisasi nama kabupaten dengan lebih menyeluruh
+            normalized_kab = re.sub(r'\s+', ' ', kab.lower().replace("kabupaten ", "").replace("kab. ", "").replace("kab ", "")).strip()
             # Gunakan ilike untuk pencocokan fleksibel
             query = f"{kab_column}=ilike.*{urllib.parse.quote(normalized_kab)}*"
             endpoint = f"{SUPABASE_URL}/rest/v1/{table_name}?{query}&select=count"
+            print(f"🔍 Query untuk {kab} (normalized: {normalized_kab}): {endpoint}")
             res = requests.get(endpoint, headers=headers)
             if res.status_code == 200:
                 data = res.json()
-                count_by_kabupaten[kab] = data[0]["count"] if data else 0
+                count = data[0]["count"] if data else 0
+                count_by_kabupaten[kab] = count
+                print(f"✅ Berhasil mengambil data dari {table_name} untuk {kab}: Count = {count}")
             else:
                 print(f"❌ Gagal mengambil data dari {table_name} untuk {kab}: Status {res.status_code}, Error: {res.text}")
         except requests.RequestException as e:
             print(f"❌ Gagal mengambil data dari {table_name} untuk {kab}: {e}")
+            count_by_kabupaten[kab] = 0
 
     return count_by_kabupaten
