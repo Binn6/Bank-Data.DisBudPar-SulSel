@@ -611,6 +611,17 @@ with tab3:
             else:
                 df = pd.read_excel(uploaded_file, engine="openpyxl")
 
+            # Konversi kolom boolean
+            boolean_columns = ["NIB_Available", "Trapis_Available", "CHSE", "Dapur_Halal", "Sertifikat_Halal", "Standar_Available"]
+            for col in boolean_columns:
+                if col in df.columns:
+                    df[col] = df[col].apply(lambda x: True if str(x).lower() in ["true", "1", "ya"] else False if str(x).lower() in ["false", "0", "tidak"] else None)
+
+            # Konversi kolom NIB, Sertifikat_Standar, Trapis ke string
+            for col in ["NIB", "Sertifikat_Standar", "Trapis"]:
+                if col in df.columns:
+                    df[col] = df[col].astype(str).replace("nan", None)
+
             st.write("📄 Preview Data:")
             st.dataframe(df)
 
@@ -727,11 +738,7 @@ with tab3:
                                 validation_errors.append(f"Baris {index + 2}: Kolom NIB wajib diisi jika NIB_Available adalah True")
                             if row["Standar_Available"] and pd.isna(row["Sertifikat_Standar"]):
                                 validation_errors.append(f"Baris {index + 2}: Kolom Sertifikat_Standar wajib diisi jika Standar_Available adalah True")
-                
-                for col in ["NIB", "Sertifikat_Standar", "Trapis"]:
-                    if col in df.columns:
-                        df[col] = df[col].astype(str).replace("nan", None)
-                
+
                 if validation_errors:
                     show_notification("error", "Validasi gagal:\n" + "\n".join(validation_errors))
                 else:
