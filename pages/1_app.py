@@ -841,8 +841,51 @@ if is_admin:
             st.error("Gagal mengambil daftar kabupaten/kota.")
             st.stop()
 
-        destinasi_counts = get_count_by_kabupaten("Destinasi%20Wisata", kabupaten_list, kab_column="Kab_Kota")
-        industri_counts = get_count_by_kabupaten("Industri", kabupaten_list, kab_column="Kab_Kota")
+        # Normalisasi daftar kabupaten untuk pencocokan
+        normalized_kabupaten_list = [kab.lower().replace("kabupaten ", "").replace("kab. ", "").strip() for kab in kabupaten_list]
+
+        # Hitung jumlah data dengan mempertimbangkan variasi penulisan
+        destinasi_counts = {}
+        industri_counts = {}
+        for kab, norm_kab in zip(kabupaten_list, normalized_kabupaten_list):
+            # Gunakan ilike dengan pola *nama_kabupaten*
+            query_destinasi = f"Kab_Kota=ilike.*{urllib.parse.quote(norm_kab)}*"
+            query_industri = f"Kab_Kota=ilike.*{urllib.parse.quote(norm_kab)}*"
+
+            try:
+                # Hitung untuk Destinasi Wisata
+                res_destinasi = requests.get(
+                    f"{SUPABASE_URL}/rest/v1/Destinasi%20Wisata?{query_destinasi}&select=count",
+                    headers={
+                        "apikey": SUPABASE_API_KEY,
+                        "Authorization": f"Bearer {SUPABASE_API_KEY}",
+                        "Content-Type": "application/json"
+                    }
+                )
+                if res_destinasi.status_code == 200:
+                    count_data = res_destinasi.json()
+                    destinasi_counts[kab] = count_data[0]["count"] if count_data else 0
+                else:
+                    destinasi_counts[kab] = 0
+
+                # Hitung untuk Industri
+                res_industri = requests.get(
+                    f"{SUPABASE_URL}/rest/v1/Industri?{query_industri}&select=count",
+                    headers={
+                        "apikey": SUPABASE_API_KEY,
+                        "Authorization": f"Bearer {SUPABASE_API_KEY}",
+                        "Content-Type": "application/json"
+                    }
+                )
+                if res_industri.status_code == 200:
+                    count_data = res_industri.json()
+                    industri_counts[kab] = count_data[0]["count"] if count_data else 0
+                else:
+                    industri_counts[kab] = 0
+
+            except Exception:
+                destinasi_counts[kab] = 0
+                industri_counts[kab] = 0
 
         progres_data = {
             "Kabupaten_Kota": kabupaten_list,

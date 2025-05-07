@@ -97,8 +97,11 @@ def get_count_by_kabupaten(table_name, kabupaten_list, kab_column="Kab_Kota"):
 
     for kab in kabupaten_list:
         try:
-            encoded_kab = urllib.parse.quote(kab)
-            endpoint = f"{SUPABASE_URL}/rest/v1/{table_name}?{kab_column}=eq.{encoded_kab}&select=count"
+            # Normalisasi nama kabupaten
+            normalized_kab = kab.lower().replace("kabupaten ", "").replace("kab. ", "").strip()
+            # Gunakan ilike untuk pencocokan fleksibel
+            query = f"{kab_column}=ilike.*{urllib.parse.quote(normalized_kab)}*"
+            endpoint = f"{SUPABASE_URL}/rest/v1/{table_name}?{query}&select=count"
             res = requests.get(endpoint, headers=headers)
             if res.status_code == 200:
                 data = res.json()
