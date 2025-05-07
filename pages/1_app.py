@@ -662,15 +662,15 @@ with tab3:
                     "Jenis_Kontak": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
                     "Kontak": lambda x: not pd.isna(x) and str(x).strip() != "",
                     "NIB_Available": lambda x: pd.isna(x) or x in [True, False],
-                    "NIB": lambda x: pd.isna(x) or isinstance(x, str),
+                    "NIB": lambda x: pd.isna(x) or isinstance(x, (str, int, float)),
                     "CHSE": lambda x: pd.isna(x) or x in [True, False],
                     "Dapur_Halal": lambda x: pd.isna(x) or x in [True, False],
                     "Jumlah_Kursi": lambda x: pd.isna(x) or (isinstance(x, (int, float)) and x >= 0),
                     "Sertifikat_Halal": lambda x: pd.isna(x) or x in [True, False],
                     "Standar_Available": lambda x: pd.isna(x) or x in [True, False],
-                    "Sertifikat_Standar": lambda x: pd.isna(x) or isinstance(x, str),
+                    "Sertifikat_Standar": lambda x: pd.isna(x) or isinstance(x, (str, int, float)),
                     "Trapis_Available": lambda x: pd.isna(x) or x in [True, False],
-                    "Trapis": lambda x: pd.isna(x) or isinstance(x, str),
+                    "Trapis": lambda x: pd.isna(x) or isinstance(x, (str, int, float)),
                     "Jenis_Hiburan": lambda x: pd.isna(x) or x in ["Club Malam", "Karaoke", "Diskotik", "Billiard", ""]
                 }
             else:
@@ -727,7 +727,9 @@ with tab3:
                                 validation_errors.append(f"Baris {index + 2}: Kolom NIB wajib diisi jika NIB_Available adalah True")
                             if row["Standar_Available"] and pd.isna(row["Sertifikat_Standar"]):
                                 validation_errors.append(f"Baris {index + 2}: Kolom Sertifikat_Standar wajib diisi jika Standar_Available adalah True")
-                
+                for col in ["NIB", "Sertifikat_Standar", "Trapis"]:
+                    if col in df.columns:
+                        df[col] = df[col].astype(str).replace("nan", None)
                 if validation_errors:
                     show_notification("error", "Validasi gagal:\n" + "\n".join(validation_errors))
                 else:
