@@ -727,9 +727,11 @@ with tab3:
                                 validation_errors.append(f"Baris {index + 2}: Kolom NIB wajib diisi jika NIB_Available adalah True")
                             if row["Standar_Available"] and pd.isna(row["Sertifikat_Standar"]):
                                 validation_errors.append(f"Baris {index + 2}: Kolom Sertifikat_Standar wajib diisi jika Standar_Available adalah True")
+                
                 for col in ["NIB", "Sertifikat_Standar", "Trapis"]:
                     if col in df.columns:
                         df[col] = df[col].astype(str).replace("nan", None)
+                
                 if validation_errors:
                     show_notification("error", "Validasi gagal:\n" + "\n".join(validation_errors))
                 else:
