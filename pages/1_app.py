@@ -798,36 +798,22 @@ with tab3:
             show_notification("error", f"Terjadi kesalahan saat membaca file: {str(e)}")
 
     st.markdown("💾 Belum punya template? Silakan download:")
-    col1, col2 = st.columns(2)
-    with col1:
-        destinasi_template = pd.DataFrame(columns=["Nama", "Kab_Kota", "Kecamatan", "Kelurahan_Desa", "Deskripsi", "Fasilitas_Umum", "Jarak_Ibukota", "Pengelola", "Rating"])
-        buffer_destinasi = io.BytesIO()
-        destinasi_template.to_excel(buffer_destinasi, index=False, engine='openpyxl')
-        buffer_destinasi.seek(0)
-        st.download_button(
-            label="📄 Template Destinasi (Excel)",
-            data=buffer_destinasi,
-            file_name="template_destinasi.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-
-    with col2:
-        industri_template = pd.DataFrame(columns=[
-            "Nama_Usaha", "Jenis_Industri", "Kab_Kota", "Kecamatan", "Kelurahan_Desa",
-            "Karyawan_Pria", "Karyawan_Wanita", "Bintang_Hotel", "Jumlah_Kamar", "Jumlah_Bed",
-            "Fasilitas", "Jenis_Kontak", "Kontak", "NIB_Available", "NIB", "CHSE",
-            "Dapur_Halal", "Jumlah_Kursi", "Sertifikat_Halal", "Standar_Available",
-            "Sertifikat_Standar", "Trapis_Available", "Trapis", "Jenis_Hiburan"
-        ])
-        buffer_industri = io.BytesIO()
-        industri_template.to_excel(buffer_industri, index=False, engine='openpyxl')
-        buffer_industri.seek(0)
-        st.download_button(
-            label="🏨 Template Industri (Excel)",
-            data=buffer_industri,
-            file_name="template_industri.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+    industri_template = pd.DataFrame(columns=[
+        "Nama_Usaha", "Jenis_Industri", "Kab_Kota", "Kecamatan", "Kelurahan_Desa",
+        "Karyawan_Pria", "Karyawan_Wanita", "Bintang_Hotel", "Jumlah_Kamar", "Jumlah_Bed",
+        "Fasilitas", "Jenis_Kontak", "Kontak", "NIB_Available", "NIB", "CHSE",
+        "Dapur_Halal", "Jumlah_Kursi", "Sertifikat_Halal", "Standar_Available",
+        "Sertifikat_Standar", "Trapis_Available", "Trapis", "Jenis_Hiburan"
+    ])
+    buffer_industri = io.BytesIO()
+    industri_template.to_excel(buffer_industri, index=False, engine='openpyxl')
+    buffer_industri.seek(0)
+    st.download_button(
+        label="🏨 Template Industri (Excel)",
+        data=buffer_industri,
+        file_name="template_industri.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 # =======================
 # 📈 PROGRES UPLOAD DATA (Hanya untuk Admin)
