@@ -600,7 +600,7 @@ with tab2:
 with tab3:
     st.subheader("📁 Upload File Excel/CSV")
 
-    st.markdown("🎯 Upload file data destinasi/industri dalam format .xlsx atau .csv sesuai template.")
+    st.markdown("🎯 Upload file data destinasi/industri dalam format .xlsx atau .csv.")
 
     uploaded_file = st.file_uploader("Unggah File Excel atau CSV", type=["xlsx", "csv"])
 
@@ -625,7 +625,7 @@ with tab3:
             st.write("📄 Preview Data:")
             st.dataframe(df)
 
-            # Definisikan kolom yang diharapkan untuk masing-masing tabel
+            # Tentukan tabel tujuan berdasarkan kolom
             destinasi_columns = set(["Nama", "Kab_Kota", "Kecamatan", "Kelurahan_Desa", "Deskripsi", "Fasilitas_Umum", "Jarak_Ibukota", "Pengelola", "Rating"])
             industri_columns = set([
                 "Nama_Usaha", "Jenis_Industri", "Kab_Kota", "Kecamatan", "Kelurahan_Desa",
@@ -634,152 +634,58 @@ with tab3:
                 "Dapur_Halal", "Jumlah_Kursi", "Sertifikat_Halal", "Standar_Available",
                 "Sertifikat_Standar", "Trapis_Available", "Trapis", "Jenis_Hiburan"
             ])
-
-            # Ambil kolom dari file yang di-upload
             uploaded_columns = set(df.columns)
 
-            # Tentukan tabel tujuan berdasarkan kolom
             if destinasi_columns.issubset(uploaded_columns):
                 table_name = "Destinasi Wisata"
                 jenis_data = "Destinasi"
-                required_columns = list(destinasi_columns)
-                validation_rules = {
-                    "Nama": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Kab_Kota": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Kecamatan": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Kelurahan_Desa": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Deskripsi": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Fasilitas_Umum": lambda x: pd.isna(x) or isinstance(x, str),
-                    "Jarak_Ibukota": lambda x: pd.isna(x) or isinstance(x, str),
-                    "Pengelola": lambda x: not pd.isna(x) and isinstance(x, str) and x in ["Pemerintah", "Swasta", "Lainnya"],
-                    "Rating": lambda x: not pd.isna(x) and isinstance(x, (int, float)) and 1 <= x <= 10
-                }
             elif industri_columns.issubset(uploaded_columns):
                 table_name = "Industri"
                 jenis_data = "Industri"
-                required_columns = list(industri_columns)
-                validation_rules = {
-                    "Nama_Usaha": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Jenis_Industri": lambda x: not pd.isna(x) and isinstance(x, str) and x in ["Travel", "Hotel", "Wisma", "Villa", "Homestay", "Restoran", "Rumah Makan", "Catering", "Spa", "Usaha Hiburan"],
-                    "Kab_Kota": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Kecamatan": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Kelurahan_Desa": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Karyawan_Pria": lambda x: not pd.isna(x) and isinstance(x, (int, float)) and x >= 0,
-                    "Karyawan_Wanita": lambda x: not pd.isna(x) and isinstance(x, (int, float)) and x >= 0,
-                    "Bintang_Hotel": lambda x: pd.isna(x) or (isinstance(x, (int, float)) and x >= 0),
-                    "Jumlah_Kamar": lambda x: pd.isna(x) or (isinstance(x, (int, float)) and x >= 0),
-                    "Jumlah_Bed": lambda x: pd.isna(x) or (isinstance(x, (int, float)) and x >= 0),
-                    "Fasilitas": lambda x: pd.isna(x) or isinstance(x, str),
-                    "Jenis_Kontak": lambda x: not pd.isna(x) and isinstance(x, str) and x.strip() != "",
-                    "Kontak": lambda x: not pd.isna(x) and str(x).strip() != "",
-                    "NIB_Available": lambda x: pd.isna(x) or x in [True, False],
-                    "NIB": lambda x: pd.isna(x) or isinstance(x, (str, int, float)),
-                    "CHSE": lambda x: pd.isna(x) or x in [True, False],
-                    "Dapur_Halal": lambda x: pd.isna(x) or x in [True, False],
-                    "Jumlah_Kursi": lambda x: pd.isna(x) or (isinstance(x, (int, float)) and x >= 0),
-                    "Sertifikat_Halal": lambda x: pd.isna(x) or x in [True, False],
-                    "Standar_Available": lambda x: pd.isna(x) or x in [True, False],
-                    "Sertifikat_Standar": lambda x: pd.isna(x) or isinstance(x, (str, int, float)),
-                    "Trapis_Available": lambda x: pd.isna(x) or x in [True, False],
-                    "Trapis": lambda x: pd.isna(x) or isinstance(x, (str, int, float)),
-                    "Jenis_Hiburan": lambda x: pd.isna(x) or x in ["Club Malam", "Karaoke", "Diskotik", "Billiard", ""]
-                }
             else:
-                show_notification("error", "Kolom file tidak sesuai dengan template Destinasi (" + ", ".join(destinasi_columns) + ") atau Industri (" + ", ".join(industri_columns) + ")")
                 table_name = None
                 jenis_data = None
-                required_columns = []
-                validation_rules = {}
+                show_notification("warning", "Kolom file tidak sesuai dengan template Destinasi atau Industri. Data akan dikirim tanpa validasi.")
 
-            if table_name:
-                # Validasi data
-                validation_errors = []
-                for index, row in df.iterrows():
-                    for col, rule in validation_rules.items():
-                        value = row[col]
-                        if not rule(value):
-                            validation_errors.append(f"Baris {index + 2}, Kolom {col}: Nilai tidak valid ({value})")
-                    # Validasi tambahan untuk Industri
-                    if table_name == "Industri":
-                        jenis_industri = row["Jenis_Industri"]
-                        if jenis_industri in ["Hotel", "Wisma", "Villa", "Homestay"]:
-                            if pd.isna(row["Dapur_Halal"]) or pd.isna(row["NIB_Available"]) or pd.isna(row["CHSE"]) or pd.isna(row["Fasilitas"]) or pd.isna(row["Jumlah_Kamar"]) or pd.isna(row["Jumlah_Bed"]):
-                                validation_errors.append(f"Baris {index + 2}: Kolom Dapur_Halal, NIB_Available, CHSE, Fasilitas, Jumlah_Kamar, dan Jumlah_Bed wajib diisi untuk {jenis_industri}")
-                            if row["NIB_Available"] and pd.isna(row["NIB"]):
-                                validation_errors.append(f"Baris {index + 2}: Kolom NIB wajib diisi jika NIB_Available adalah True")
-                        if jenis_industri in ["Restoran", "Rumah Makan"]:
-                            if pd.isna(row["NIB_Available"]) or pd.isna(row["CHSE"]) or pd.isna(row["Fasilitas"]) or pd.isna(row["Jumlah_Kursi"]):
-                                validation_errors.append(f"Baris {index + 2}: Kolom NIB_Available, CHSE, Fasilitas, dan Jumlah_Kursi wajib diisi untuk {jenis_industri}")
-                            if row["NIB_Available"] and pd.isna(row["NIB"]):
-                                validation_errors.append(f"Baris {index + 2}: Kolom NIB wajib diisi jika NIB_Available adalah True")
-                        if jenis_industri == "Spa":
-                            if pd.isna(row["NIB_Available"]) or pd.isna(row["Standar_Available"]):
-                                validation_errors.append(f"Baris {index + 2}: Kolom NIB_Available dan Standar_Available wajib diisi untuk Spa")
-                            if row["NIB_Available"] and pd.isna(row["NIB"]):
-                                validation_errors.append(f"Baris {index + 2}: Kolom NIB wajib diisi jika NIB_Available adalah True")
-                            if row["Standar_Available"] and pd.isna(row["Sertifikat_Standar"]):
-                                validation_errors.append(f"Baris {index + 2}: Kolom Sertifikat_Standar wajib diisi jika Standar_Available adalah True")
-                        if jenis_industri == "Catering":
-                            if pd.isna(row["NIB_Available"]) or pd.isna(row["Trapis_Available"]):
-                                validation_errors.append(f"Baris {index + 2}: Kolom NIB_Available dan Trapis_Available wajib diisi untuk Catering")
-                            if row["NIB_Available"] and pd.isna(row["NIB"]):
-                                validation_errors.append(f"Baris {index + 2}: Kolom NIB wajib diisi jika NIB_Available adalah True")
-                            if row["Trapis_Available"] and pd.isna(row["Trapis"]):
-                                validation_errors.append(f"Baris {index + 2}: Kolom Trapis wajib diisi jika Trapis_Available adalah True")
-                        if jenis_industri == "Travel":
-                            if pd.isna(row["NIB_Available"]):
-                                validation_errors.append(f"Baris {index + 2}: Kolom NIB_Available wajib diisi untuk Travel")
-                            if row["NIB_Available"] and pd.isna(row["NIB"]):
-                                validation_errors.append(f"Baris {index + 2}: Kolom NIB wajib diisi jika NIB_Available adalah True")
-                        if jenis_industri == "Usaha Hiburan":
-                            if pd.isna(row["NIB_Available"]) or pd.isna(row["Standar_Available"]) or pd.isna(row["Jenis_Hiburan"]):
-                                validation_errors.append(f"Baris {index + 2}: Kolom NIB_Available, Standar_Available, dan Jenis_Hiburan wajib diisi untuk Usaha Hiburan")
-                            if row["NIB_Available"] and pd.isna(row["NIB"]):
-                                validation_errors.append(f"Baris {index + 2}: Kolom NIB wajib diisi jika NIB_Available adalah True")
-                            if row["Standar_Available"] and pd.isna(row["Sertifikat_Standar"]):
-                                validation_errors.append(f"Baris {index + 2}: Kolom Sertifikat_Standar wajib diisi jika Standar_Available adalah True")
+            if st.button(f"Kirim Data ke Database"):
+                df["Tanggal_Input"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-                if validation_errors:
-                    show_notification("error", "Validasi gagal:\n" + "\n".join(validation_errors))
-                else:
-                    show_notification("success", f"Struktur file valid untuk {jenis_data}! Siap dikirim ke database.")
+                if table_name == "Industri":
+                    if "Karyawan_Pria" in df.columns:
+                        df["Karyawan_Pria"] = df["Karyawan_Pria"].astype("Int64", errors="ignore")
+                    if "Karyawan_Wanita" in df.columns:
+                        df["Karyawan_Wanita"] = df["Karyawan_Wanita"].astype("Int64", errors="ignore")
+                    if "Jumlah_Kamar" in df.columns:
+                        df["Jumlah_Kamar"] = df["Jumlah_Kamar"].astype("Int64", errors="ignore")
+                    if "Jumlah_Bed" in df.columns:
+                        df["Jumlah_Bed"] = df["Jumlah_Bed"].astype("Int64", errors="ignore")
+                    if "Bintang_Hotel" in df.columns:
+                        df["Bintang_Hotel"] = df["Bintang_Hotel"].astype("Int64", errors="ignore")
+                    if "Jumlah_Kursi" in df.columns:
+                        df["Jumlah_Kursi"] = df["Jumlah_Kursi"].astype("Int64", errors="ignore")
 
-                    if st.button(f"Kirim Data ke Database"):
-                        df["Tanggal_Input"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                df = df.where(pd.notnull(df), None)  # Replace NaN with None
+                data = df.to_dict(orient="records")
 
-                        if table_name == "Industri":
-                            df["Karyawan_Pria"] = df["Karyawan_Pria"].astype("Int64")
-                            df["Karyawan_Wanita"] = df["Karyawan_Wanita"].astype("Int64")
-                            if "Jumlah_Kamar" in df.columns:
-                                df["Jumlah_Kamar"] = df["Jumlah_Kamar"].astype("Int64")
-                            if "Jumlah_Bed" in df.columns:
-                                df["Jumlah_Bed"] = df["Jumlah_Bed"].astype("Int64")
-                            if "Bintang_Hotel" in df.columns:
-                                df["Bintang_Hotel"] = df["Bintang_Hotel"].astype("Int64")
-                            if "Jumlah_Kursi" in df.columns:
-                                df["Jumlah_Kursi"] = df["Jumlah_Kursi"].astype("Int64")
-
-                        df = df.where(pd.notnull(df), None)  # Replace NaN with None
-                        data = df.to_dict(orient="records")
-
-                        try:
-                            res = requests.post(
-                                f"{SUPABASE_URL}/rest/v1/{table_name}",
-                                data=json.dumps(data, ignore_nan=True),
-                                headers={
-                                    "apikey": SUPABASE_API_KEY,
-                                    "Authorization": f"Bearer {SUPABASE_API_KEY}",
-                                    "Content-Type": "application/json",
-                                    "Prefer": "return=representation"
-                                }
-                            )
-                            if res.status_code == 201:
-                                show_notification("success", "Data berhasil dikirim ke Supabase!")
-                            else:
-                                error_message = res.json().get("message", res.text) if res.text else "Unknown error"
-                                show_notification("error", f"Gagal kirim data: {res.status_code} - {error_message}")
-                        except requests.RequestException as e:
-                            show_notification("error", f"Gagal kirim data ke Supabase: {str(e)}")
+                try:
+                    table_name = table_name or "Destinasi Wisata"  # Default to Destinasi if not identified
+                    res = requests.post(
+                        f"{SUPABASE_URL}/rest/v1/{table_name}",
+                        data=json.dumps(data, ignore_nan=True),
+                        headers={
+                            "apikey": SUPABASE_API_KEY,
+                            "Authorization": f"Bearer {SUPABASE_API_KEY}",
+                            "Content-Type": "application/json",
+                            "Prefer": "return=representation"
+                        }
+                    )
+                    if res.status_code == 201:
+                        show_notification("success", "Data berhasil dikirim ke Supabase!")
+                    else:
+                        error_message = res.json().get("message", res.text) if res.text else "Unknown error"
+                        show_notification("error", f"Gagal kirim data: {res.status_code} - {error_message}")
+                except requests.RequestException as e:
+                    show_notification("error", f"Gagal kirim data ke Supabase: {str(e)}")
 
             # Download ulang file sebagai Excel
             towrite = io.BytesIO()
